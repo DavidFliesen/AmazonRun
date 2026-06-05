@@ -394,7 +394,7 @@ scene.background = new THREE.Color(0x88c7b0);
 scene.fog = new THREE.FogExp2(0xbfe3bf, 0.018);
 
 const camera = new THREE.PerspectiveCamera(62, W / H, 0.1, 500);
-camera.position.set(0, 5.2, 9.5);
+camera.position.set(0, 4.45, 7.25);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(W, H);
@@ -502,45 +502,152 @@ function makeCylinder(r1,r2,h,seg,mat) {
 
 function makeBoat() {
   const boat = new THREE.Group();
-  const hull = makeBox(1.8, .42, 3.2, materials.boatWood);
-  hull.position.y = .35;
-  boat.add(hull);
 
-  const bow = makeCylinder(.9, .45, .6, 4, materials.boatWood);
+  const darkRubber = new THREE.MeshStandardMaterial({color:0x2a2019, roughness:.82});
+  const ropeMat = new THREE.MeshStandardMaterial({color:0xb88a4b, roughness:.95});
+  const seatMat = new THREE.MeshStandardMaterial({color:0x263238, roughness:.75});
+  const metalMat = new THREE.MeshStandardMaterial({color:0x2b3335, roughness:.58, metalness:.15});
+  const cargoMat = new THREE.MeshStandardMaterial({color:0x6e5a37, roughness:.9});
+
+  // Main hull, made from stacked shapes to suggest a carved wooden river boat.
+  const lowerHull = makeBox(2.35, .45, 3.95, materials.boatWood);
+  lowerHull.position.y = .34;
+  lowerHull.scale.x = .88;
+  boat.add(lowerHull);
+
+  const upperHull = makeBox(2.55, .28, 3.65, materials.boatWood);
+  upperHull.position.y = .72;
+  boat.add(upperHull);
+
+  const bow = makeCylinder(1.05, .38, .92, 4, materials.boatWood);
   bow.rotation.y = Math.PI / 4;
-  bow.scale.z = .8;
-  bow.position.set(0, .38, -1.85);
+  bow.scale.set(1.0, .65, .9);
+  bow.position.set(0, .55, -2.22);
   boat.add(bow);
 
-  const deck = makeBox(1.45, .14, 2.45, materials.boatLight);
-  deck.position.y = .65;
+  const stern = makeBox(2.2, .55, .55, materials.boatWood);
+  stern.position.set(0, .55, 2.05);
+  boat.add(stern);
+
+  // Inner deck
+  const deck = makeBox(1.85, .12, 3.15, materials.boatLight);
+  deck.position.y = .93;
   boat.add(deck);
 
-  const canopy = makeBox(1.65, .12, 1.65, materials.canopy);
-  canopy.position.set(0, 1.22, -.18);
-  boat.add(canopy);
+  // Side rails
+  for (const x of [-1.18, 1.18]) {
+    const rail = makeBox(.09, .15, 3.45, ropeMat);
+    rail.position.set(x, 1.08, -.05);
+    boat.add(rail);
+  }
 
-  [[-.72,.9,-.92],[.72,.9,-.92],[-.72,.9,.55],[.72,.9,.55]].forEach(([x,y,z]) => {
-    const p = makeCylinder(.025,.025,.85,8,materials.trunk);
+  // Front rail / nose trim
+  const noseTrim = makeBox(1.15, .14, .12, ropeMat);
+  noseTrim.position.set(0, 1.04, -1.95);
+  boat.add(noseTrim);
+
+  // Canopy poles
+  [[-.9,1.3,-1.05],[.9,1.3,-1.05],[-.9,1.3,.65],[.9,1.3,.65]].forEach(([x,y,z]) => {
+    const p = makeCylinder(.03,.03,1.12,8,materials.trunk);
     p.position.set(x,y,z);
     boat.add(p);
   });
 
-  const motor = makeBox(.45,.42,.42,new THREE.MeshStandardMaterial({color:0x20272a, roughness:.7}));
-  motor.position.set(0,.55,1.9);
+  // Canvas canopy roof with a slight layered feel
+  const canopy = makeBox(2.15, .13, 2.05, materials.canopy);
+  canopy.position.set(0, 1.9, -.2);
+  boat.add(canopy);
+
+  const canopyFront = makeBox(2.25, .10, .18, materials.canopy);
+  canopyFront.position.set(0, 1.84, -1.25);
+  canopyFront.rotation.x = -.12;
+  boat.add(canopyFront);
+
+  const canopyBack = makeBox(2.2, .10, .18, materials.canopy);
+  canopyBack.position.set(0, 1.84, .88);
+  canopyBack.rotation.x = .12;
+  boat.add(canopyBack);
+
+  // Driver silhouette under canopy
+  const driverBody = makeCylinder(.17,.22,.45,12,seatMat);
+  driverBody.position.set(0, 1.15, -.35);
+  boat.add(driverBody);
+
+  const driverHead = makeCylinder(.14,.14,.18,12,new THREE.MeshStandardMaterial({color:0x5b3b25, roughness:.8}));
+  driverHead.position.set(0, 1.48, -.35);
+  boat.add(driverHead);
+
+  const cap = makeCylinder(.15,.18,.08,12,new THREE.MeshStandardMaterial({color:0x2d3b2e, roughness:.8}));
+  cap.position.set(0, 1.60, -.35);
+  boat.add(cap);
+
+  // Steering box
+  const consoleBox = makeBox(.42,.33,.32,metalMat);
+  consoleBox.position.set(0,.99,-.78);
+  boat.add(consoleBox);
+
+  // Rear motor
+  const motor = makeBox(.55,.56,.48,metalMat);
+  motor.position.set(0,.73,2.45);
   boat.add(motor);
 
-  const cargo = makeBox(.45,.35,.45,materials.crate);
-  cargo.position.set(-.45,.9,.6);
-  boat.add(cargo);
+  const propShaft = makeCylinder(.045,.045,.75,12,metalMat);
+  propShaft.rotation.x = Math.PI/2;
+  propShaft.position.set(0,.42,2.85);
+  boat.add(propShaft);
 
-  const barrel = makeCylinder(.18,.18,.42,16,new THREE.MeshStandardMaterial({color:0x4d5842, roughness:.8}));
-  barrel.rotation.x = Math.PI/2;
-  barrel.position.set(.45,.92,.55);
-  boat.add(barrel);
+  const prop = makeBox(.56,.045,.12,metalMat);
+  prop.position.set(0,.42,3.24);
+  boat.add(prop);
+
+  // Cargo crates and barrels inside the boat
+  function addSmallCrate(x,z,scale=.42) {
+    const c = new THREE.Group();
+    const box = makeBox(scale, scale*.68, scale, materials.crate);
+    c.add(box);
+    const bandA = makeBox(scale*.12, scale*.72, scale*1.08, materials.crateBand);
+    bandA.position.x = -scale*.2;
+    c.add(bandA);
+    const bandB = makeBox(scale*.12, scale*.72, scale*1.08, materials.crateBand);
+    bandB.position.x = scale*.2;
+    c.add(bandB);
+    c.position.set(x,1.16,z);
+    boat.add(c);
+  }
+
+  addSmallCrate(-.58,.78,.46);
+  addSmallCrate(.55,.78,.42);
+  addSmallCrate(-.62,1.35,.36);
+
+  for (const [x,z] of [[.35,1.25],[.72,1.25]]) {
+    const barrel = makeCylinder(.16,.16,.42,16,cargoMat);
+    barrel.rotation.x = Math.PI/2;
+    barrel.position.set(x,1.16,z);
+    boat.add(barrel);
+  }
+
+  const bundle = makeBox(.64,.18,.34,new THREE.MeshStandardMaterial({color:0x7a6c45, roughness:.92}));
+  bundle.position.set(.05,1.16,1.45);
+  boat.add(bundle);
+
+  // Side fenders like the mockup
+  for (const x of [-1.32, 1.32]) {
+    for (const z of [-.75, .55, 1.45]) {
+      const fender = makeCylinder(.13,.13,.55,12,darkRubber);
+      fender.rotation.z = Math.PI/2;
+      fender.position.set(x,.63,z);
+      boat.add(fender);
+    }
+  }
+
+  // Small wake plate / transom detail
+  const transom = makeBox(1.55,.1,.12,ropeMat);
+  transom.position.set(0,1.02,2.29);
+  boat.add(transom);
 
   boat.position.set(0,0,2.8);
   boat.rotation.y = Math.PI;
+  boat.scale.set(1.05,1.05,1.05);
   scene.add(boat);
   return boat;
 }
@@ -687,8 +794,8 @@ function resetCameraAndInput() {
   state.targetLane = 0;
   state.lane = 0;
   boat.position.x = 0;
-  camera.position.set(0, 5.2, 9.5);
-  camera.lookAt(0, .75, -7.5);
+  camera.position.set(0, 4.45, 7.25);
+  camera.lookAt(0, 1.05, -6.4);
 }
 
 async function resetGame() {
@@ -773,7 +880,7 @@ function updateGame() {
     const dx = Math.abs(obj.position.x - boat.position.x);
     const dz = Math.abs(obj.position.z - boat.position.z);
 
-    if (dz < 1.5 && dx < 1.25 && !obj.userData.collected && !obj.userData.hit) {
+    if (dz < 1.5 && dx < 1.45 && !obj.userData.collected && !obj.userData.hit) {
       if (obj.userData.type === "crate") {
         obj.userData.collected = true;
         state.delivered++;
@@ -839,9 +946,9 @@ function updateGame() {
   }
 
   camera.position.x = lerp(camera.position.x, boat.position.x * .42, .035);
-  camera.position.y = 4.7 + Math.sin(performance.now()*.0012)*.04;
-  camera.position.z = 8.7;
-  camera.lookAt(boat.position.x * .2, .75, -7.5);
+  camera.position.y = 4.15 + Math.sin(performance.now()*.0012)*.035;
+  camera.position.z = 7.25;
+  camera.lookAt(boat.position.x * .24, 1.05, -6.4);
 
   deliveredEl.textContent = `${state.delivered} / 3`;
   distanceEl.textContent = `${Math.floor(state.distance)} m`;
