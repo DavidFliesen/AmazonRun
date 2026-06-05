@@ -1,12 +1,716 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>Amazon Run</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #071b12;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  #gameWrap {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at top, #1c6b42 0%, #0b2e1e 45%, #031009 100%);
+  }
+
+  canvas {
+    background: #0b4d3b;
+    max-width: 100vw;
+    max-height: 100vh;
+    image-rendering: auto;
+    border: 4px solid #d7b35a;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+  }
+
+  #mobileControls {
+    position: fixed;
+    bottom: 18px;
+    left: 0;
+    width: 100%;
+    display: none;
+    justify-content: space-between;
+    padding: 0 22px;
+    pointer-events: none;
+  }
+
+  .pad, .boost {
+    pointer-events: auto;
+    user-select: none;
+  }
+
+  .pad {
+    display: grid;
+    grid-template-columns: 52px 52px 52px;
+    grid-template-rows: 52px 52px;
+    gap: 6px;
+  }
+
+  .btn {
+    width: 52px;
+    height: 52px;
+    background: rgba(255,255,255,0.22);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 12px;
+    color: white;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .blank {
+    opacity: 0;
+  }
+
+  .boost .btn {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  @media (pointer: coarse) {
+    #mobileControls {
+      display: flex;
+    }
+  }
+</style>
 </head>
-<body style="font-family:Arial;background:#0b2e1e;color:white;text-align:center;">
-<h1>Amazon Run</h1>
-<p>This is the downloadable index.html placeholder file. Replace with the full game code as needed.</p>
+
+<body>
+<div id="gameWrap">
+  <canvas id="game" width="900" height="600"></canvas>
+</div>
+
+<div id="mobileControls">
+  <div class="pad">
+    <div class="blank"></div>
+    <div class="btn" data-key="up">▲</div>
+    <div class="blank"></div>
+    <div class="btn" data-key="left">◀</div>
+    <div class="btn" data-key="down">▼</div>
+    <div class="btn" data-key="right">▶</div>
+  </div>
+  <div class="boost">
+    <div class="btn" data-key="boost">BOOST</div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+let keys = {};
+let gameState = "title";
+let distance = 0;
+let score = 0;
+let supplies = 0;
+let health = 100;
+let fuel = 100;
+let biome = "Open River";
+let shake = 0;
+let winDistance = 4500;
+
+const boat = {
+  x: W / 2,
+  y: H - 120,
+  w: 34,
+  h: 62,
+  speed: 4.4,
+  invincible: 0
+};
+
+let obstacles = [];
+let suppliesArr = [];
+let enemies = [];
+let particles = [];
+let scenery = [];
+
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function resetGame() {
+  gameState = "playing";
+  distance = 0;
+  score = 0;
+  supplies = 0;
+  health = 100;
+  fuel = 100;
+  biome = "Open River";
+  shake = 0;
+  boat.x = W / 2;
+  boat.y = H - 120;
+  boat.invincible = 0;
+  obstacles = [];
+  suppliesArr = [];
+  enemies = [];
+  particles = [];
+  scenery = [];
+
+  for (let i = 0; i < 40; i++) {
+    scenery.push({
+      x: Math.random() < 0.5 ? rand(0, 170) : rand(W - 170, W),
+      y: rand(-H, H),
+      size: rand(20, 70),
+      type: Math.random() < 0.5 ? "tree" : "bush"
+    });
+  }
+}
+
+function riverBounds(y) {
+  let progress = distance / winDistance;
+  let narrowing = clamp(progress, 0, 1) * 120;
+  let wave = Math.sin((y + distance) * 0.006) * 55;
+  let left = 160 + narrowing + wave;
+  let right = W - 160 - narrowing + wave;
+  return { left, right };
+}
+
+function getBiome() {
+  if (distance < 1100) return "Open River";
+  if (distance < 2200) return "River Villages";
+  if (distance < 3400) return "Jungle Channel";
+  return "Deep Amazon";
+}
+
+function spawnThings() {
+  const difficulty = 1 + distance / 1800;
+
+  if (Math.random() < 0.028 * difficulty) {
+    const y = -60;
+    const b = riverBounds(y);
+    obstacles.push({
+      x: rand(b.left + 35, b.right - 35),
+      y,
+      r: rand(18, 38),
+      vy: rand(2.5, 4.5) + difficulty,
+      type: Math.random() < 0.35 ? "croc" : Math.random() < 0.65 ? "log" : "rock"
+    });
+  }
+
+  if (Math.random() < 0.012) {
+    const y = -50;
+    const b = riverBounds(y);
+    suppliesArr.push({
+      x: rand(b.left + 35, b.right - 35),
+      y,
+      size: 24,
+      vy: 3.2
+    });
+  }
+
+  if (Math.random() < 0.006 * difficulty) {
+    const y = -80;
+    const b = riverBounds(y);
+    enemies.push({
+      x: rand(b.left + 50, b.right - 50),
+      y,
+      w: 38,
+      h: 70,
+      vy: rand(2.8, 4.2) + difficulty,
+      hp: 1
+    });
+  }
+}
+
+function update() {
+  if (gameState !== "playing") return;
+
+  biome = getBiome();
+  distance += 1.6;
+  score = Math.floor(distance) + supplies * 100;
+
+  let moveX = 0;
+  let moveY = 0;
+
+  if (keys.ArrowLeft || keys.a || keys.left) moveX -= 1;
+  if (keys.ArrowRight || keys.d || keys.right) moveX += 1;
+  if (keys.ArrowUp || keys.w || keys.up) moveY -= 1;
+  if (keys.ArrowDown || keys.s || keys.down) moveY += 1;
+
+  let boosting = (keys[" "] || keys.boost) && fuel > 0;
+  let speed = boosting ? boat.speed * 1.75 : boat.speed;
+
+  if (boosting) {
+    fuel -= 0.35;
+    particles.push({
+      x: boat.x,
+      y: boat.y + 38,
+      life: 18,
+      size: rand(4, 9)
+    });
+  } else {
+    fuel += 0.045;
+  }
+
+  fuel = clamp(fuel, 0, 100);
+
+  boat.x += moveX * speed;
+  boat.y += moveY * speed;
+  boat.y = clamp(boat.y, 70, H - 55);
+
+  const bounds = riverBounds(boat.y);
+  boat.x = clamp(boat.x, bounds.left + 25, bounds.right - 25);
+
+  if (boat.invincible > 0) boat.invincible--;
+
+  spawnThings();
+
+  obstacles.forEach(o => o.y += o.vy);
+  suppliesArr.forEach(s => s.y += s.vy);
+  enemies.forEach(e => {
+    e.y += e.vy;
+    e.x += Math.sin((e.y + distance) * 0.035) * 2.2;
+
+    if (Math.abs(e.x - boat.x) < 130 && e.y < boat.y) {
+      e.x += e.x < boat.x ? 1.1 : -1.1;
+    }
+  });
+
+  particles.forEach(p => {
+    p.y += 2.5;
+    p.life--;
+  });
+
+  scenery.forEach(t => {
+    t.y += 2.2;
+    if (t.y > H + 80) {
+      t.y = -80;
+      t.x = Math.random() < 0.5 ? rand(0, 170) : rand(W - 170, W);
+      t.size = rand(20, 70);
+    }
+  });
+
+  obstacles = obstacles.filter(o => o.y < H + 80);
+  suppliesArr = suppliesArr.filter(s => s.y < H + 80);
+  enemies = enemies.filter(e => e.y < H + 100);
+  particles = particles.filter(p => p.life > 0);
+
+  checkCollisions();
+
+  if (health <= 0) gameState = "gameover";
+  if (distance >= winDistance && supplies >= 10) gameState = "win";
+}
+
+function hitBoat(x, y, r) {
+  const dx = boat.x - x;
+  const dy = boat.y - y;
+  return Math.sqrt(dx * dx + dy * dy) < r + 25;
+}
+
+function checkCollisions() {
+  if (boat.invincible > 0) return;
+
+  for (const o of obstacles) {
+    if (hitBoat(o.x, o.y, o.r)) {
+      damage(o.type === "croc" ? 22 : 15);
+      o.y = H + 999;
+      return;
+    }
+  }
+
+  for (const e of enemies) {
+    if (hitBoat(e.x, e.y, 35)) {
+      damage(28);
+      e.y = H + 999;
+      return;
+    }
+  }
+
+  for (const s of suppliesArr) {
+    if (hitBoat(s.x, s.y, 25)) {
+      supplies++;
+      fuel = clamp(fuel + 16, 0, 100);
+      health = clamp(health + 5, 0, 100);
+      s.y = H + 999;
+      for (let i = 0; i < 14; i++) {
+        particles.push({
+          x: s.x + rand(-12, 12),
+          y: s.y + rand(-12, 12),
+          life: rand(10, 25),
+          size: rand(3, 8)
+        });
+      }
+    }
+  }
+}
+
+function damage(amount) {
+  health -= amount;
+  boat.invincible = 55;
+  shake = 12;
+}
+
+function drawRiver() {
+  ctx.fillStyle = "#0d2f1f";
+  ctx.fillRect(0, 0, W, H);
+
+  scenery.forEach(t => {
+    ctx.fillStyle = t.type === "tree" ? "#114d25" : "#1f6d35";
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#0b3219";
+    ctx.beginPath();
+    ctx.arc(t.x - t.size * 0.25, t.y + t.size * 0.15, t.size * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.beginPath();
+  for (let y = -20; y <= H + 20; y += 20) {
+    const b = riverBounds(y);
+    if (y === -20) ctx.moveTo(b.left, y);
+    else ctx.lineTo(b.left, y);
+  }
+
+  for (let y = H + 20; y >= -20; y -= 20) {
+    const b = riverBounds(y);
+    ctx.lineTo(b.right, y);
+  }
+
+  ctx.closePath();
+
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "#247c75");
+  grad.addColorStop(0.5, "#1c6c70");
+  grad.addColorStop(1, "#155566");
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 14; i++) {
+    let y = (i * 55 + distance * 1.4) % H;
+    let b = riverBounds(y);
+    ctx.beginPath();
+    ctx.moveTo(b.left + 30, y);
+    ctx.quadraticCurveTo(W / 2, y + 18, b.right - 30, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "#d3b05c";
+  ctx.lineWidth = 4;
+  for (let y = -20; y <= H + 20; y += 20) {
+    let b = riverBounds(y);
+    ctx.beginPath();
+    ctx.arc(b.left, y, 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(b.right, y, 2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawBoat() {
+  ctx.save();
+  ctx.translate(boat.x, boat.y);
+
+  if (boat.invincible > 0 && Math.floor(boat.invincible / 5) % 2 === 0) {
+    ctx.globalAlpha = 0.45;
+  }
+
+  ctx.fillStyle = "#8b3a1d";
+  ctx.beginPath();
+  ctx.moveTo(0, -36);
+  ctx.lineTo(24, -10);
+  ctx.lineTo(18, 34);
+  ctx.lineTo(-18, 34);
+  ctx.lineTo(-24, -10);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#d6b15a";
+  ctx.fillRect(-12, -14, 24, 28);
+
+  ctx.fillStyle = "#26343f";
+  ctx.fillRect(-7, -5, 14, 14);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(-3, -34, 6, 14);
+
+  ctx.restore();
+}
+
+function drawObstacle(o) {
+  if (o.type === "rock") {
+    ctx.fillStyle = "#5c5c55";
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#8b8b82";
+    ctx.beginPath();
+    ctx.arc(o.x - o.r * 0.25, o.y - o.r * 0.25, o.r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (o.type === "log") {
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(Math.sin(o.y * 0.02) * 0.5);
+    ctx.fillStyle = "#7b4a22";
+    ctx.fillRect(-o.r * 1.5, -o.r * 0.45, o.r * 3, o.r * 0.9);
+    ctx.fillStyle = "#b57939";
+    ctx.beginPath();
+    ctx.arc(-o.r * 1.5, 0, o.r * 0.45, 0, Math.PI * 2);
+    ctx.arc(o.r * 1.5, 0, o.r * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else {
+    ctx.fillStyle = "#234b1f";
+    ctx.beginPath();
+    ctx.ellipse(o.x, o.y, o.r * 1.4, o.r * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f7e487";
+    ctx.beginPath();
+    ctx.arc(o.x - 12, o.y - 3, 3, 0, Math.PI * 2);
+    ctx.arc(o.x + 12, o.y - 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawSupply(s) {
+  ctx.save();
+  ctx.translate(s.x, s.y);
+  ctx.rotate(Math.sin(s.y * 0.03) * 0.25);
+  ctx.fillStyle = "#c7922c";
+  ctx.fillRect(-14, -14, 28, 28);
+  ctx.strokeStyle = "#fff0a6";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(-14, -14, 28, 28);
+  ctx.beginPath();
+  ctx.moveTo(-14, 0);
+  ctx.lineTo(14, 0);
+  ctx.moveTo(0, -14);
+  ctx.lineTo(0, 14);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawEnemy(e) {
+  ctx.save();
+  ctx.translate(e.x, e.y);
+
+  ctx.fillStyle = "#2c2c2c";
+  ctx.beginPath();
+  ctx.moveTo(0, -38);
+  ctx.lineTo(23, -12);
+  ctx.lineTo(18, 36);
+  ctx.lineTo(-18, 36);
+  ctx.lineTo(-23, -12);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#9b1c1c";
+  ctx.fillRect(-13, -10, 26, 26);
+
+  ctx.fillStyle = "#ffcc66";
+  ctx.fillRect(-4, -34, 8, 12);
+
+  ctx.restore();
+}
+
+function drawHUD() {
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.fillRect(14, 14, 320, 118);
+
+  ctx.fillStyle = "white";
+  ctx.font = "18px Arial";
+  ctx.fillText("Amazon Run", 28, 40);
+  ctx.fillText("Biome: " + biome, 28, 66);
+  ctx.fillText("Supplies: " + supplies + " / 10", 28, 92);
+  ctx.fillText("Distance: " + Math.floor(distance) + " / " + winDistance, 28, 118);
+
+  bar(700, 22, 160, 16, health, "#e54b4b", "Hull");
+  bar(700, 52, 160, 16, fuel, "#f2c84b", "Fuel");
+
+  ctx.fillStyle = "white";
+  ctx.font = "15px Arial";
+  ctx.fillText("Arrows/WASD steer • Space boosts", 560, H - 20);
+}
+
+function bar(x, y, w, h, val, color, label) {
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w * (val / 100), h);
+  ctx.strokeStyle = "white";
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = "white";
+  ctx.font = "14px Arial";
+  ctx.fillText(label, x - 48, y + 13);
+}
+
+function drawTitle() {
+  drawRiver();
+
+  ctx.fillStyle = "rgba(0,0,0,0.58)";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = "#f5d77a";
+  ctx.font = "bold 62px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("AMAZON RUN", W / 2, 160);
+
+  ctx.fillStyle = "white";
+  ctx.font = "24px Arial";
+  ctx.fillText("Pilot your river boat deeper into the jungle.", W / 2, 220);
+  ctx.fillText("Collect 10 supply crates and reach extraction.", W / 2, 258);
+
+  ctx.font = "20px Arial";
+  ctx.fillText("Avoid rocks, logs, crocodiles, and raider boats.", W / 2, 310);
+  ctx.fillText("Arrow Keys / WASD to steer • Spacebar to boost", W / 2, 345);
+
+  ctx.fillStyle = "#8df0a7";
+  ctx.font = "bold 26px Arial";
+  ctx.fillText("Press ENTER or tap to start", W / 2, 430);
+
+  ctx.textAlign = "left";
+}
+
+function drawEndScreen(title, subtitle) {
+  drawRiver();
+
+  ctx.fillStyle = "rgba(0,0,0,0.62)";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#f5d77a";
+  ctx.font = "bold 54px Arial";
+  ctx.fillText(title, W / 2, 190);
+
+  ctx.fillStyle = "white";
+  ctx.font = "24px Arial";
+  ctx.fillText(subtitle, W / 2, 250);
+  ctx.fillText("Final Score: " + score, W / 2, 300);
+
+  ctx.fillStyle = "#8df0a7";
+  ctx.font = "bold 26px Arial";
+  ctx.fillText("Press ENTER or tap to play again", W / 2, 390);
+  ctx.textAlign = "left";
+}
+
+function draw() {
+  ctx.save();
+
+  if (shake > 0) {
+    ctx.translate(rand(-shake, shake), rand(-shake, shake));
+    shake *= 0.86;
+    if (shake < 0.3) shake = 0;
+  }
+
+  if (gameState === "title") {
+    drawTitle();
+    ctx.restore();
+    return;
+  }
+
+  if (gameState === "gameover") {
+    drawEndScreen("MISSION FAILED", "Your boat was lost in the Amazon.");
+    ctx.restore();
+    return;
+  }
+
+  if (gameState === "win") {
+    drawEndScreen("EXTRACTION COMPLETE", "You survived the deep Amazon run!");
+    ctx.restore();
+    return;
+  }
+
+  drawRiver();
+
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life / 25;
+    ctx.fillStyle = "#dffcff";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  suppliesArr.forEach(drawSupply);
+  obstacles.forEach(drawObstacle);
+  enemies.forEach(drawEnemy);
+  drawBoat();
+  drawHUD();
+
+  ctx.restore();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener("keydown", e => {
+  keys[e.key] = true;
+
+  if (e.key === "Enter") {
+    if (gameState !== "playing") resetGame();
+  }
+
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+
+window.addEventListener("keyup", e => {
+  keys[e.key] = false;
+});
+
+canvas.addEventListener("pointerdown", () => {
+  if (gameState !== "playing") resetGame();
+});
+
+document.querySelectorAll(".btn").forEach(btn => {
+  const key = btn.dataset.key;
+
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    keys[key] = true;
+    if (gameState !== "playing") resetGame();
+  });
+
+  btn.addEventListener("pointerup", e => {
+    e.preventDefault();
+    keys[key] = false;
+  });
+
+  btn.addEventListener("pointerleave", e => {
+    keys[key] = false;
+  });
+
+  btn.addEventListener("pointercancel", e => {
+    keys[key] = false;
+  });
+});
+
+loop();
+</script>
 </body>
 </html>
