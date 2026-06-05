@@ -2,21 +2,132 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
-<title>Amazon Run — Stylized 3D Prototype</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+<title>Amazon Run — Stylized 3D</title>
 <style>
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #08140c;
+    background: #06120b;
     color: white;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   canvas {
     display: block;
+    touch-action: none;
+  }
+
+  #logo {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    pointer-events: none;
+    width: min(330px, 42vw);
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.65));
+  }
+
+  #logo img {
+    width: 100%;
+    display: block;
+  }
+
+  #fallbackLogo {
+    text-align: center;
+    text-shadow: 0 5px 10px black;
+    font-weight: 950;
+    line-height: .9;
+  }
+
+  #fallbackLogo .amazon {
+    font-size: clamp(30px, 4.8vw, 58px);
+    color: #e7d084;
+    -webkit-text-stroke: 2px #17391d;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  #fallbackLogo .run {
+    font-size: clamp(24px, 4vw, 48px);
+    color: #f59b25;
+    font-style: italic;
+    transform: rotate(-3deg);
+    display: inline-block;
+  }
+
+  #menuButton {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+    z-index: 20;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,220,130,.35);
+    background: rgba(3,13,8,.72);
+    color: white;
+    font-size: 28px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  #menu {
+    position: fixed;
+    top: calc(max(16px, env(safe-area-inset-top)) + 58px);
+    left: max(16px, env(safe-area-inset-left));
+    z-index: 19;
+    width: min(310px, calc(100vw - 32px));
+    display: none;
+    border-radius: 18px;
+    border: 1px solid rgba(255,220,130,.35);
+    background: rgba(3,13,8,.86);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 18px 60px rgba(0,0,0,.48);
+    overflow: hidden;
+  }
+
+  #menu.open {
+    display: block;
+  }
+
+  .menuHeader {
+    padding: 14px 16px;
+    color: #ffd76e;
+    font-weight: 900;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+
+  .menuItem {
+    width: 100%;
+    padding: 14px 16px;
+    border: 0;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    background: transparent;
+    color: white;
+    text-align: left;
+    font: inherit;
+    font-weight: 750;
+  }
+
+  .menuItem:last-child {
+    border-bottom: 0;
+  }
+
+  .menuItem small {
+    display: block;
+    color: rgba(255,255,255,.72);
+    font-weight: 500;
+    margin-top: 3px;
   }
 
   #overlay {
@@ -38,6 +149,12 @@
     box-shadow: 0 28px 90px rgba(0,0,0,.65);
     text-align: center;
     backdrop-filter: blur(10px);
+  }
+
+  .panel img {
+    width: min(380px, 80vw);
+    margin-bottom: 8px;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
   }
 
   .panel h1 {
@@ -71,9 +188,7 @@
     line-height: 1.35;
   }
 
-  .card b {
-    color: #ffd76e;
-  }
+  .card b { color: #ffd76e; }
 
   #hud {
     position: fixed;
@@ -97,46 +212,9 @@
     font-weight: 750;
   }
 
-  .right {
-    text-align: right;
-  }
-
-  .gold {
-    color: #ffd76e;
-  }
-
-  .green {
-    color: #7ff0a4;
-  }
-
-  #logo {
-    position: fixed;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 3;
-    pointer-events: none;
-    text-align: center;
-    text-shadow: 0 5px 10px black;
-    font-weight: 950;
-    line-height: .9;
-  }
-
-  #logo .amazon {
-    font-size: clamp(30px, 4.8vw, 58px);
-    color: #e7d084;
-    -webkit-text-stroke: 2px #17391d;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-
-  #logo .run {
-    font-size: clamp(24px, 4vw, 48px);
-    color: #f59b25;
-    font-style: italic;
-    transform: rotate(-3deg);
-    display: inline-block;
-  }
+  .right { text-align: right; }
+  .gold { color: #ffd76e; }
+  .green { color: #7ff0a4; }
 
   #message {
     position: fixed;
@@ -191,7 +269,7 @@
   @media (max-width: 760px) {
     .cards { grid-template-columns: 1fr; }
     .panel { padding: 24px; }
-    #logo { display: none; }
+    #logo { width: min(230px, 46vw); }
     .hudbox { min-width: 155px; font-size: 13px; }
   }
 
@@ -201,9 +279,21 @@
 </style>
 </head>
 <body>
+<button id="menuButton" aria-label="Open menu">☰</button>
+
+<nav id="menu" aria-label="Game menu">
+  <div class="menuHeader">Amazon Run Menu</div>
+  <button class="menuItem" id="fullscreenToggle">Toggle Fullscreen<small>Use this if the browser view feels zoomed or cramped.</small></button>
+  <button class="menuItem" id="resetView">Reset View<small>Re-centers the camera and clears stuck input.</small></button>
+  <button class="menuItem" id="restartGame">Restart Mission<small>Begin the delivery run again.</small></button>
+</nav>
+
 <div id="logo">
-  <div class="amazon">Amazon</div>
-  <div class="run">Run</div>
+  <img src="amazon-run-logo.png" alt="Amazon Run logo" onerror="this.style.display='none';document.getElementById('fallbackLogo').style.display='block';" />
+  <div id="fallbackLogo" style="display:none">
+    <div class="amazon">Amazon</div>
+    <div class="run">Run</div>
+  </div>
 </div>
 
 <div id="hud">
@@ -227,14 +317,14 @@
 
 <div id="overlay">
   <div class="panel" id="panel">
-    <h1>Amazon Run</h1>
+    <img src="amazon-run-logo.png" alt="Amazon Run logo" onerror="this.remove()" />
     <p><b>Stylized 3D prototype:</b> a calm third-person river boat adventure through the Amazon.</p>
-    <p>Drive the boat, enjoy the jungle, pick up 3 supply crates, and reach the outpost. This version is not about punishment — it is about atmosphere and exploration.</p>
+    <p>Drive the boat, enjoy the jungle, pick up 3 supply crates, and reach the outpost.</p>
     <div class="cards">
       <div class="card"><b>Controls:</b> A/D or ←/→ steer. W/S or ↑/↓ adjust speed. Space gives a gentle boost.</div>
       <div class="card"><b>Mission:</b> collect 3 golden crates. They are spaced far apart and easy to spot.</div>
-      <div class="card"><b>Hazards:</b> a few logs and rocks appear later. They are meant to guide steering, not overwhelm you.</div>
-      <div class="card"><b>Style:</b> low-poly/stylized jungle, river, ruins, boat, crates, birds, mist, and sunset lighting.</div>
+      <div class="card"><b>Fullscreen:</b> when you start, the game will try to enter fullscreen. You can also use the hamburger menu.</div>
+      <div class="card"><b>Zoom fix:</b> the page blocks normal pinch/double-tap zoom, and Reset View re-centers the camera.</div>
     </div>
     <p><b>Press Enter or tap to begin.</b></p>
   </div>
@@ -255,6 +345,46 @@ const deliveredEl = document.getElementById("delivered");
 const distanceEl = document.getElementById("distance");
 const speedEl = document.getElementById("speed");
 const zoneEl = document.getElementById("zone");
+const menuButton = document.getElementById("menuButton");
+const menu = document.getElementById("menu");
+const fullscreenToggle = document.getElementById("fullscreenToggle");
+const resetView = document.getElementById("resetView");
+const restartGame = document.getElementById("restartGame");
+
+document.addEventListener("gesturestart", e => e.preventDefault(), { passive: false });
+document.addEventListener("gesturechange", e => e.preventDefault(), { passive: false });
+document.addEventListener("gestureend", e => e.preventDefault(), { passive: false });
+
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+async function enterFullscreen() {
+  try {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (err) {
+    showMessage("Fullscreen was blocked by the browser. Use the menu toggle if needed.", 180);
+  }
+}
+
+async function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch (err) {
+    showMessage("Fullscreen is not available in this browser view.", 180);
+  }
+}
+
+menuButton.addEventListener("click", () => menu.classList.toggle("open"));
+fullscreenToggle.addEventListener("click", () => { toggleFullscreen(); menu.classList.remove("open"); });
+resetView.addEventListener("click", () => { resetCameraAndInput(); menu.classList.remove("open"); showMessage("View reset.", 100); });
+restartGame.addEventListener("click", () => { resetGame(); menu.classList.remove("open"); });
 
 let W = innerWidth;
 let H = innerHeight;
@@ -337,7 +467,6 @@ const state = {
   trees: [],
   ripples: [],
   birds: [],
-  hazards: [],
   input: {},
   touchSteer: 0
 };
@@ -373,9 +502,7 @@ function makeCylinder(r1,r2,h,seg,mat) {
 
 function makeBoat() {
   const boat = new THREE.Group();
-
   const hull = makeBox(1.8, .42, 3.2, materials.boatWood);
-  hull.scale.x = 1;
   hull.position.y = .35;
   boat.add(hull);
 
@@ -393,20 +520,19 @@ function makeBoat() {
   canopy.position.set(0, 1.22, -.18);
   boat.add(canopy);
 
-  const polePositions = [[-.72,.9,-.92],[.72,.9,-.92],[-.72,.9,.55],[.72,.9,.55]];
-  for (const [x,y,z] of polePositions) {
+  [[-.72,.9,-.92],[.72,.9,-.92],[-.72,.9,.55],[.72,.9,.55]].forEach(([x,y,z]) => {
     const p = makeCylinder(.025,.025,.85,8,materials.trunk);
     p.position.set(x,y,z);
     boat.add(p);
-  }
+  });
 
   const motor = makeBox(.45,.42,.42,new THREE.MeshStandardMaterial({color:0x20272a, roughness:.7}));
   motor.position.set(0,.55,1.9);
   boat.add(motor);
 
-  const crate1 = makeBox(.45,.35,.45,materials.crate);
-  crate1.position.set(-.45,.9,.6);
-  boat.add(crate1);
+  const cargo = makeBox(.45,.35,.45,materials.crate);
+  cargo.position.set(-.45,.9,.6);
+  boat.add(cargo);
 
   const barrel = makeCylinder(.18,.18,.42,16,new THREE.MeshStandardMaterial({color:0x4d5842, roughness:.8}));
   barrel.rotation.x = Math.PI/2;
@@ -455,14 +581,11 @@ function makeTerrain() {
 
 function makeTree(x,z,s=1) {
   const tree = new THREE.Group();
-
   const trunk = makeCylinder(.08*s,.12*s,1.4*s,7,materials.trunk);
   trunk.position.y = .55*s;
   tree.add(trunk);
 
-  const colorPick = Math.random();
-  const leafMat = colorPick < .33 ? materials.jungleDark : colorPick < .66 ? materials.jungleMid : materials.jungleLight;
-
+  const leafMat = Math.random() < .33 ? materials.jungleDark : Math.random() < .66 ? materials.jungleMid : materials.jungleLight;
   for (let i=0; i<3; i++) {
     const crown = makeCylinder(.04*s, .65*s*(1-i*.15), .75*s, 7, leafMat);
     crown.position.y = (1.25 + i*.42)*s;
@@ -483,17 +606,14 @@ function makeRuins() {
     step.position.set(0,i*.22,0);
     ruin.add(step);
   }
-
   for (let i=0;i<3;i++) {
     const block = makeBox(.45,1.2,.45,materials.ruin);
     block.position.set(-1+i,1.35,-.2);
     ruin.add(block);
   }
-
   const cap = makeBox(2.7,.38,.7,materials.ruin);
   cap.position.set(0,2.08,-.2);
   ruin.add(cap);
-
   ruin.position.set(8.2,0,-55);
   ruin.rotation.y = -.28;
   world.add(ruin);
@@ -501,26 +621,13 @@ function makeRuins() {
 
 function makeCrate(z) {
   const crate = new THREE.Group();
-
   const box = makeBox(1.0, .75, 1.0, materials.crate);
   crate.add(box);
-
-  const band1 = makeBox(.12,.82,1.08,materials.crateBand);
-  band1.position.x = -.28;
-  crate.add(band1);
-
-  const band2 = makeBox(.12,.82,1.08,materials.crateBand);
-  band2.position.x = .28;
-  crate.add(band2);
-
-  const band3 = makeBox(1.08,.84,.12,materials.crateBand);
-  band3.position.z = -.28;
-  crate.add(band3);
-
-  const band4 = makeBox(1.08,.84,.12,materials.crateBand);
-  band4.position.z = .28;
-  crate.add(band4);
-
+  [[-.28,0,0,.12,.82,1.08],[.28,0,0,.12,.82,1.08],[0,0,-.28,1.08,.84,.12],[0,0,.28,1.08,.84,.12]].forEach(([x,y,z,w,h,d]) => {
+    const band = makeBox(w,h,d,materials.crateBand);
+    band.position.set(x,y,z);
+    crate.add(band);
+  });
   crate.position.set(rand(-3.4,3.4), .45, z);
   crate.userData = { type:"crate", collected:false };
   world.add(crate);
@@ -552,15 +659,12 @@ function makeBird() {
   const body = makeCylinder(.07,.12,.45,8,materials.bird);
   body.rotation.x = Math.PI/2;
   bird.add(body);
-
   const wingL = makeBox(.55,.035,.14,materials.bird);
   wingL.position.x = -.34;
   bird.add(wingL);
-
   const wingR = makeBox(.55,.035,.14,materials.bird);
   wingR.position.x = .34;
   bird.add(wingR);
-
   bird.position.set(rand(-7,7), rand(5,8), rand(-120,-25));
   bird.userData = { speed: rand(.018,.035), flap: rand(0,10) };
   world.add(bird);
@@ -576,17 +680,28 @@ function initWorld() {
 
 initWorld();
 
-function resetGame() {
+function resetCameraAndInput() {
+  state.input = {};
+  state.touchSteer = 0;
+  state.boost = false;
+  state.targetLane = 0;
+  state.lane = 0;
+  boat.position.x = 0;
+  camera.position.set(0, 5.2, 9.5);
+  camera.lookAt(0, .75, -7.5);
+}
+
+async function resetGame() {
+  await enterFullscreen();
   for (const o of state.objects) world.remove(o);
   state.objects = [];
   state.distance = 0;
   state.delivered = 0;
   state.speed = .14;
   state.targetSpeed = .14;
-  state.lane = 0;
-  state.targetLane = 0;
   state.nextCrate = 140;
   state.crateIndex = 0;
+  resetCameraAndInput();
   state.mode = "play";
   overlay.style.display = "none";
   showMessage("Jungle Sector 1: slow water. Deliver 3 crates and enjoy the river.", 280);
@@ -651,7 +766,6 @@ function updateGame() {
   const move = state.speed;
   state.distance += move * 3.2;
 
-  // Move all river objects toward the camera.
   for (const obj of [...state.objects]) {
     obj.position.z += move * 5.7;
     obj.rotation.y += obj.userData.type === "crate" ? .005 : 0;
@@ -678,7 +792,6 @@ function updateGame() {
     }
   }
 
-  // Recycle jungle.
   for (const tr of state.trees) {
     tr.position.z += move * 5.7;
     if (tr.position.z > 18) {
@@ -708,7 +821,6 @@ function updateGame() {
     }
   }
 
-  // Spawn only three crates, with long scenic gaps.
   if (state.delivered < 3 && state.distance > state.nextCrate && !state.objects.some(o => o.userData.type === "crate")) {
     makeCrate(-120);
     state.crateIndex++;
@@ -716,7 +828,6 @@ function updateGame() {
     showMessage("Supply crate ahead. Line up with it and cruise through.", 190);
   }
 
-  // Gentle hazards after the first crate.
   if (state.distance > 520 && Math.random() < .006 && state.objects.filter(o => o.userData.type !== "crate").length < 4) {
     Math.random() < .5 ? makeLog(-125) : makeRock(-125);
   }
@@ -724,7 +835,7 @@ function updateGame() {
   if (state.delivered >= 3 && state.distance > 1600) {
     state.mode = "win";
     overlay.style.display = "grid";
-    panel.innerHTML = `<h1>Delivery Complete</h1><p>You delivered all three supply crates and reached the river outpost.</p><p><b>Press Enter or tap to cruise again.</b></p>`;
+    panel.innerHTML = `<img src="amazon-run-logo.png" alt="Amazon Run logo" onerror="this.remove()" /><h1>Delivery Complete</h1><p>You delivered all three supply crates and reached the river outpost.</p><p><b>Press Enter or tap to cruise again.</b></p>`;
   }
 
   camera.position.x = lerp(camera.position.x, boat.position.x * .42, .035);
