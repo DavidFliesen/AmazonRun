@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Run</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <header>
+      <h1>Amazon Run</h1>
+      <p>Pilot the river boat, dodge hazards, collect supplies, and outrun the jungle raiders.</p>
+    </header>
+
+    <canvas id="game" width="960" height="540" aria-label="Amazon Run game canvas"></canvas>
+
+    <section class="hud-help">
+      <p><strong>Controls:</strong> Arrow keys or WASD to steer. Spacebar for boost. Tap/click Start to begin.</p>
+      <button id="startBtn">Start Mission</button>
+      <button id="restartBtn">Restart</button>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
