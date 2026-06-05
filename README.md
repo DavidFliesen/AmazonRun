@@ -1,6 +1,7 @@
 # Amazon Run
 
 A starter 2D scrolling river game for GitHub Pages.
+https://davidfliesen.github.io/AmazonRun/
 
 ## How to play
 
