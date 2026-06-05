@@ -144,6 +144,10 @@ No backend services required.
 
 ---
 
-## License
+## Developer
 
-This project is intended as an open-source browser game for educational and entertainment purposes.
+Amazon Run was created by **David Fliesen**, a retired U.S. Navy Chief Journalist, multimedia designer, animator, and Generative AI developer. The project combines a passion for interactive storytelling, game design, emerging technology, and immersive experiences inspired by the natural world.
+
+GitHub: https://github.com/davidfliesen
+
+Portfolio: https://davidfliesen.github.io/
