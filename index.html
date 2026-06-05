@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
-<title>Amazon Run</title>
+<title>Amazon Run — Stylized 3D Prototype</title>
 <style>
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #06120b;
+    background: #08140c;
     color: white;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     touch-action: none;
@@ -17,9 +17,6 @@
 
   canvas {
     display: block;
-    width: 100vw;
-    height: 100vh;
-    background: #06120b;
   }
 
   #overlay {
@@ -27,15 +24,16 @@
     inset: 0;
     display: grid;
     place-items: center;
-    background: radial-gradient(circle at center, rgba(28,69,35,.38), rgba(0,0,0,.65));
+    background: radial-gradient(circle at center, rgba(19,60,31,.42), rgba(0,0,0,.72));
+    z-index: 10;
   }
 
   .panel {
-    max-width: 880px;
+    max-width: 860px;
     margin: 24px;
     padding: 34px 40px;
     border-radius: 28px;
-    background: linear-gradient(180deg, rgba(8,31,18,.94), rgba(3,10,7,.88));
+    background: linear-gradient(180deg, rgba(8,35,20,.94), rgba(3,12,7,.9));
     border: 1px solid rgba(255,220,130,.35);
     box-shadow: 0 28px 90px rgba(0,0,0,.65);
     text-align: center;
@@ -43,11 +41,11 @@
   }
 
   .panel h1 {
-    margin: 0 0 10px;
-    font-size: clamp(46px, 8vw, 86px);
-    color: #f7d36d;
-    letter-spacing: 1px;
+    margin: 0 0 8px;
+    font-size: clamp(44px, 8vw, 84px);
+    color: #f5d36d;
     text-shadow: 0 6px 0 rgba(0,0,0,.25);
+    letter-spacing: 1px;
   }
 
   .panel p {
@@ -73,90 +71,83 @@
     line-height: 1.35;
   }
 
-  .card b { color: #ffd76e; }
+  .card b {
+    color: #ffd76e;
+  }
 
   #hud {
     position: fixed;
-    inset: 20px 24px auto 24px;
+    inset: 18px 22px auto 22px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     pointer-events: none;
+    z-index: 3;
     text-shadow: 0 2px 7px black;
   }
 
   .hudbox {
-    background: rgba(3,13,8,.56);
+    background: rgba(3,13,8,.58);
     border: 1px solid rgba(255,220,130,.25);
     border-radius: 18px;
     padding: 14px 16px;
-    min-width: 235px;
+    min-width: 225px;
     backdrop-filter: blur(8px);
     box-shadow: 0 14px 35px rgba(0,0,0,.25);
     font-weight: 750;
   }
 
-  .hudbox.right {
+  .right {
     text-align: right;
-    min-width: 200px;
   }
 
-  #titleLogo {
+  .gold {
+    color: #ffd76e;
+  }
+
+  .green {
+    color: #7ff0a4;
+  }
+
+  #logo {
     position: fixed;
-    top: 22px;
+    top: 18px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 3;
     pointer-events: none;
     text-align: center;
     text-shadow: 0 5px 10px black;
     font-weight: 950;
-    letter-spacing: 2px;
     line-height: .9;
   }
 
-  #titleLogo .amazon {
-    font-size: clamp(32px, 5vw, 64px);
-    color: #e9d28a;
-    -webkit-text-stroke: 2px #16351a;
+  #logo .amazon {
+    font-size: clamp(30px, 4.8vw, 58px);
+    color: #e7d084;
+    -webkit-text-stroke: 2px #17391d;
     text-transform: uppercase;
+    letter-spacing: 2px;
   }
 
-  #titleLogo .run {
-    font-size: clamp(26px, 4vw, 52px);
+  #logo .run {
+    font-size: clamp(24px, 4vw, 48px);
     color: #f59b25;
+    font-style: italic;
     transform: rotate(-3deg);
     display: inline-block;
-    font-style: italic;
-  }
-
-  .label { color: #ffd76e; }
-  .quiet { color: #7feea2; }
-
-  .bar {
-    width: 190px;
-    height: 10px;
-    background: rgba(255,255,255,.17);
-    border-radius: 999px;
-    overflow: hidden;
-    margin: 6px 0 10px;
-  }
-
-  .fill {
-    height: 100%;
-    border-radius: 999px;
-    width: 100%;
   }
 
   #message {
     position: fixed;
     left: 50%;
-    bottom: 26px;
+    bottom: 28px;
     transform: translateX(-50%);
     width: min(760px, calc(100vw - 36px));
     padding: 13px 18px;
     border-radius: 16px;
     text-align: center;
-    background: rgba(4,15,9,.68);
+    background: rgba(4,15,9,.7);
     border: 1px solid rgba(255,220,130,.25);
     box-shadow: 0 12px 40px rgba(0,0,0,.38);
     backdrop-filter: blur(8px);
@@ -165,6 +156,7 @@
     transition: opacity .25s;
     pointer-events: none;
     text-shadow: 0 2px 5px black;
+    z-index: 4;
   }
 
   #mobile {
@@ -174,6 +166,7 @@
     justify-content: space-between;
     padding: 0 24px;
     pointer-events: none;
+    z-index: 5;
   }
 
   .touch {
@@ -198,9 +191,8 @@
   @media (max-width: 760px) {
     .cards { grid-template-columns: 1fr; }
     .panel { padding: 24px; }
-    #titleLogo { display: none; }
-    .hudbox { min-width: 165px; font-size: 13px; }
-    .bar { width: 140px; }
+    #logo { display: none; }
+    .hudbox { min-width: 155px; font-size: 13px; }
   }
 
   @media (pointer: coarse) {
@@ -209,38 +201,26 @@
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-
-<div id="titleLogo">
+<div id="logo">
   <div class="amazon">Amazon</div>
   <div class="run">Run</div>
 </div>
 
 <div id="hud">
   <div class="hudbox">
-    <div class="label">OBJECTIVE</div>
-    <div id="objective">Deliver 3 supply crates to the outpost.</div>
-    <div style="margin-top:10px" class="quiet">DELIVERED</div>
+    <div class="gold">MISSION</div>
+    <div>Deliver 3 supply crates to the river outpost.</div>
+    <div class="green" style="margin-top:10px">DELIVERED</div>
     <div id="delivered" style="font-size:28px">0 / 3</div>
   </div>
-
   <div class="hudbox right">
-    <div class="label">DISTANCE</div>
+    <div class="gold">DISTANCE</div>
     <div id="distance" style="font-size:26px">0 m</div>
-    <div class="label" style="margin-top:10px">SPEED</div>
+    <div class="gold" style="margin-top:10px">SPEED</div>
     <div id="speed">Calm</div>
-    <div class="label" style="margin-top:10px">ZONE</div>
+    <div class="gold" style="margin-top:10px">ZONE</div>
     <div id="zone">Jungle Sector 1</div>
   </div>
-</div>
-
-<div class="hudbox" style="position:fixed;right:24px;bottom:24px;pointer-events:none">
-  <div>Engine</div>
-  <div class="bar"><div id="engineBar" class="fill" style="background:linear-gradient(90deg,#60e878,#ffe66e)"></div></div>
-  <div>Durability</div>
-  <div class="bar"><div id="hullBar" class="fill" style="background:linear-gradient(90deg,#ff5252,#ffbe4a)"></div></div>
-  <div>Fuel</div>
-  <div class="bar"><div id="fuelBar" class="fill" style="background:linear-gradient(90deg,#3ee58a,#ffe46e)"></div></div>
 </div>
 
 <div id="message"></div>
@@ -248,13 +228,13 @@
 <div id="overlay">
   <div class="panel" id="panel">
     <h1>Amazon Run</h1>
-    <p><b>Mission:</b> cruise the Amazon, deliver <b>3 supply crates</b>, and reach the river outpost.</p>
-    <p>This is now a slower, more scenic river adventure. The goal is to explore, read the river, and enjoy the jungle instead of getting smashed every few seconds.</p>
+    <p><b>Stylized 3D prototype:</b> a calm third-person river boat adventure through the Amazon.</p>
+    <p>Drive the boat, enjoy the jungle, pick up 3 supply crates, and reach the outpost. This version is not about punishment — it is about atmosphere and exploration.</p>
     <div class="cards">
-      <div class="card"><b>Yellow crates:</b> supply deliveries. Collect only 3 total. Each one repairs your boat and adds fuel.</div>
-      <div class="card"><b>River hazards:</b> rocks, logs, sandbars, and crocodiles appear gradually. Most are avoidable with gentle steering.</div>
-      <div class="card"><b>Controls:</b> A/D or ←/→ steer. W/S or ↑/↓ move forward/back in the view. Space gives a short boost.</div>
-      <div class="card"><b>Vibe:</b> golden light, jungle banks, ruins, birds, slow water, and a third-person boat view.</div>
+      <div class="card"><b>Controls:</b> A/D or ←/→ steer. W/S or ↑/↓ adjust speed. Space gives a gentle boost.</div>
+      <div class="card"><b>Mission:</b> collect 3 golden crates. They are spaced far apart and easy to spot.</div>
+      <div class="card"><b>Hazards:</b> a few logs and rocks appear later. They are meant to guide steering, not overwhelm you.</div>
+      <div class="card"><b>Style:</b> low-poly/stylized jungle, river, ruins, boat, crates, birds, mist, and sunset lighting.</div>
     </div>
     <p><b>Press Enter or tap to begin.</b></p>
   </div>
@@ -265,735 +245,506 @@
   <div class="touch boost" id="boost">BOOST</div>
 </div>
 
-<script>
-(() => {
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
-  const overlay = document.getElementById("overlay");
-  const panel = document.getElementById("panel");
-  const msg = document.getElementById("message");
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
 
-  const objectiveEl = document.getElementById("objective");
-  const deliveredEl = document.getElementById("delivered");
-  const distanceEl = document.getElementById("distance");
-  const speedEl = document.getElementById("speed");
-  const zoneEl = document.getElementById("zone");
-  const engineBar = document.getElementById("engineBar");
-  const hullBar = document.getElementById("hullBar");
-  const fuelBar = document.getElementById("fuelBar");
+const overlay = document.getElementById("overlay");
+const panel = document.getElementById("panel");
+const msg = document.getElementById("message");
+const deliveredEl = document.getElementById("delivered");
+const distanceEl = document.getElementById("distance");
+const speedEl = document.getElementById("speed");
+const zoneEl = document.getElementById("zone");
 
-  let W = innerWidth, H = innerHeight, DPR = 1;
+let W = innerWidth;
+let H = innerHeight;
 
-  function resize() {
-    DPR = Math.min(devicePixelRatio || 1, 2);
-    W = innerWidth;
-    H = innerHeight;
-    canvas.width = W * DPR;
-    canvas.height = H * DPR;
-    canvas.style.width = W + "px";
-    canvas.style.height = H + "px";
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x88c7b0);
+scene.fog = new THREE.FogExp2(0xbfe3bf, 0.018);
+
+const camera = new THREE.PerspectiveCamera(62, W / H, 0.1, 500);
+camera.position.set(0, 5.2, 9.5);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+window.addEventListener("resize", () => {
+  W = innerWidth;
+  H = innerHeight;
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  renderer.setSize(W, H);
+});
+
+const sun = new THREE.DirectionalLight(0xffd28a, 2.8);
+sun.position.set(-10, 18, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+sun.shadow.camera.left = -50;
+sun.shadow.camera.right = 50;
+sun.shadow.camera.top = 50;
+sun.shadow.camera.bottom = -50;
+scene.add(sun);
+
+const hemi = new THREE.HemisphereLight(0xffe0a8, 0x164b28, 1.6);
+scene.add(hemi);
+
+const materials = {
+  water: new THREE.MeshStandardMaterial({ color: 0x167078, roughness: 0.48, metalness: 0.05 }),
+  waterLine: new THREE.MeshBasicMaterial({ color: 0xdefcff, transparent: true, opacity: 0.32 }),
+  jungleDark: new THREE.MeshStandardMaterial({ color: 0x0b3118, roughness: 1 }),
+  jungleMid: new THREE.MeshStandardMaterial({ color: 0x176a2e, roughness: 1 }),
+  jungleLight: new THREE.MeshStandardMaterial({ color: 0x3d9b47, roughness: 1 }),
+  trunk: new THREE.MeshStandardMaterial({ color: 0x6c3d21, roughness: 1 }),
+  boatWood: new THREE.MeshStandardMaterial({ color: 0x7a4827, roughness: .88 }),
+  boatLight: new THREE.MeshStandardMaterial({ color: 0xc8984a, roughness: .8 }),
+  canopy: new THREE.MeshStandardMaterial({ color: 0xd7bf78, roughness: .95 }),
+  crate: new THREE.MeshStandardMaterial({ color: 0xca9131, roughness: .8 }),
+  crateBand: new THREE.MeshStandardMaterial({ color: 0x52381f, roughness: .9 }),
+  rock: new THREE.MeshStandardMaterial({ color: 0x707568, roughness: 1 }),
+  ruin: new THREE.MeshStandardMaterial({ color: 0x686b56, roughness: 1 }),
+  log: new THREE.MeshStandardMaterial({ color: 0x74451f, roughness: 1 }),
+  bird: new THREE.MeshStandardMaterial({ color: 0xd45834, roughness: .8 })
+};
+
+const world = new THREE.Group();
+scene.add(world);
+
+function rand(a,b){ return Math.random()*(b-a)+a; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+
+const state = {
+  mode: "title",
+  distance: 0,
+  delivered: 0,
+  target: 3,
+  speed: 0.14,
+  targetSpeed: 0.14,
+  lane: 0,
+  targetLane: 0,
+  boost: false,
+  messageTimer: 0,
+  nextCrate: 140,
+  crateIndex: 0,
+  objects: [],
+  trees: [],
+  ripples: [],
+  birds: [],
+  hazards: [],
+  input: {},
+  touchSteer: 0
+};
+
+function showMessage(text, time = 240) {
+  msg.textContent = text;
+  msg.style.opacity = 1;
+  state.messageTimer = time;
+}
+
+function hideMessageTick() {
+  if (state.messageTimer > 0) {
+    state.messageTimer--;
+    if (state.messageTimer <= 0) msg.style.opacity = 0;
   }
-  addEventListener("resize", resize);
-  resize();
+}
 
-  const input = {};
-  const state = {
-    mode: "title",
-    t: 0,
-    distance: 0,
-    delivered: 0,
-    target: 3,
-    hull: 100,
-    fuel: 100,
-    engine: 100,
-    lane: 0,
-    boatDepth: .78,
-    steer: 0,
-    speed: .36,
-    boost: false,
-    inv: 0,
-    shake: 0,
-    objects: [],
-    trees: [],
-    birds: [],
-    mist: [],
-    splashes: [],
-    msgTimer: 0,
-    nextCrateAt: 360,
-    tutorial: 0
-  };
+function makeBox(w,h,d, mat) {
+  const g = new THREE.BoxGeometry(w,h,d);
+  const m = new THREE.Mesh(g, mat);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  return m;
+}
 
-  function rand(a,b){ return Math.random()*(b-a)+a; }
-  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
-  function lerp(a,b,t){ return a+(b-a)*t; }
+function makeCylinder(r1,r2,h,seg,mat) {
+  const g = new THREE.CylinderGeometry(r1,r2,h,seg);
+  const m = new THREE.Mesh(g, mat);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  return m;
+}
 
-  function say(text, time=240) {
-    msg.textContent = text;
-    msg.style.opacity = 1;
-    state.msgTimer = time;
+function makeBoat() {
+  const boat = new THREE.Group();
+
+  const hull = makeBox(1.8, .42, 3.2, materials.boatWood);
+  hull.scale.x = 1;
+  hull.position.y = .35;
+  boat.add(hull);
+
+  const bow = makeCylinder(.9, .45, .6, 4, materials.boatWood);
+  bow.rotation.y = Math.PI / 4;
+  bow.scale.z = .8;
+  bow.position.set(0, .38, -1.85);
+  boat.add(bow);
+
+  const deck = makeBox(1.45, .14, 2.45, materials.boatLight);
+  deck.position.y = .65;
+  boat.add(deck);
+
+  const canopy = makeBox(1.65, .12, 1.65, materials.canopy);
+  canopy.position.set(0, 1.22, -.18);
+  boat.add(canopy);
+
+  const polePositions = [[-.72,.9,-.92],[.72,.9,-.92],[-.72,.9,.55],[.72,.9,.55]];
+  for (const [x,y,z] of polePositions) {
+    const p = makeCylinder(.025,.025,.85,8,materials.trunk);
+    p.position.set(x,y,z);
+    boat.add(p);
   }
 
-  function makeTree(z=Math.random()) {
-    return {
-      side: Math.random()<.5 ? -1 : 1,
-      z,
-      x: rand(.50, 1.08),
-      size: rand(.8, 2.7),
-      kind: Math.random(),
-      vine: Math.random()<.28,
-      lean: rand(-.2,.2)
-    };
+  const motor = makeBox(.45,.42,.42,new THREE.MeshStandardMaterial({color:0x20272a, roughness:.7}));
+  motor.position.set(0,.55,1.9);
+  boat.add(motor);
+
+  const crate1 = makeBox(.45,.35,.45,materials.crate);
+  crate1.position.set(-.45,.9,.6);
+  boat.add(crate1);
+
+  const barrel = makeCylinder(.18,.18,.42,16,new THREE.MeshStandardMaterial({color:0x4d5842, roughness:.8}));
+  barrel.rotation.x = Math.PI/2;
+  barrel.position.set(.45,.92,.55);
+  boat.add(barrel);
+
+  boat.position.set(0,0,2.8);
+  boat.rotation.y = Math.PI;
+  scene.add(boat);
+  return boat;
+}
+
+const boat = makeBoat();
+
+function makeWater() {
+  const water = makeBox(16, .08, 260, materials.water);
+  water.position.set(0, -0.05, -80);
+  water.receiveShadow = true;
+  world.add(water);
+
+  for (let i=0; i<60; i++) {
+    const ripple = makeBox(rand(.8,2.4), .015, .03, materials.waterLine);
+    ripple.position.set(rand(-6,6), .02, rand(-150,10));
+    ripple.userData.speed = rand(.04,.11);
+    world.add(ripple);
+    state.ripples.push(ripple);
+  }
+}
+
+function makeTerrain() {
+  const left = makeBox(18, .4, 260, materials.jungleDark);
+  left.position.set(-13, -.18, -80);
+  left.receiveShadow = true;
+  world.add(left);
+
+  const right = makeBox(18, .4, 260, materials.jungleDark);
+  right.position.set(13, -.18, -80);
+  right.receiveShadow = true;
+  world.add(right);
+
+  for (let z=-150; z<20; z+=7) {
+    makeTree(rand(-10.5,-6.5), z, rand(.8,1.8));
+    makeTree(rand(6.5,10.5), z+rand(-2,2), rand(.8,1.8));
+  }
+}
+
+function makeTree(x,z,s=1) {
+  const tree = new THREE.Group();
+
+  const trunk = makeCylinder(.08*s,.12*s,1.4*s,7,materials.trunk);
+  trunk.position.y = .55*s;
+  tree.add(trunk);
+
+  const colorPick = Math.random();
+  const leafMat = colorPick < .33 ? materials.jungleDark : colorPick < .66 ? materials.jungleMid : materials.jungleLight;
+
+  for (let i=0; i<3; i++) {
+    const crown = makeCylinder(.04*s, .65*s*(1-i*.15), .75*s, 7, leafMat);
+    crown.position.y = (1.25 + i*.42)*s;
+    tree.add(crown);
   }
 
-  function reset() {
-    state.mode = "play";
-    overlay.style.display = "none";
-    state.t = 0;
-    state.distance = 0;
-    state.delivered = 0;
-    state.hull = 100;
-    state.fuel = 100;
-    state.engine = 100;
-    state.lane = 0;
-    state.boatDepth = .78;
-    state.steer = 0;
-    state.speed = .36;
-    state.boost = false;
-    state.inv = 0;
-    state.shake = 0;
-    state.objects = [];
-    state.splashes = [];
-    state.trees = [];
-    state.birds = [];
-    state.mist = [];
-    state.nextCrateAt = 360;
-    state.tutorial = 0;
+  tree.position.set(x,0,z);
+  tree.rotation.y = rand(0,Math.PI*2);
+  world.add(tree);
+  state.trees.push(tree);
+  return tree;
+}
 
-    for (let i=0;i<190;i++) state.trees.push(makeTree(Math.random()));
-    for (let i=0;i<16;i++) state.birds.push({x:rand(-W,W), y:rand(H*.1,H*.34), s:rand(.7,1.7), v:rand(.12,.42), flap:rand(0,10)});
-    for (let i=0;i<8;i++) state.mist.push({x:rand(0,W), y:rand(H*.28,H*.62), w:rand(W*.18,W*.35), h:rand(20,55), v:rand(.05,.14)});
-
-    say("Jungle Sector 1: calm waters. Deliver 3 crates and enjoy the river.", 280);
+function makeRuins() {
+  const ruin = new THREE.Group();
+  for (let i=0;i<7;i++) {
+    const step = makeBox(3.4-i*.32,.25,1.4,materials.ruin);
+    step.position.set(0,i*.22,0);
+    ruin.add(step);
   }
 
-  function finish(win) {
-    state.mode = win ? "win" : "dead";
+  for (let i=0;i<3;i++) {
+    const block = makeBox(.45,1.2,.45,materials.ruin);
+    block.position.set(-1+i,1.35,-.2);
+    ruin.add(block);
+  }
+
+  const cap = makeBox(2.7,.38,.7,materials.ruin);
+  cap.position.set(0,2.08,-.2);
+  ruin.add(cap);
+
+  ruin.position.set(8.2,0,-55);
+  ruin.rotation.y = -.28;
+  world.add(ruin);
+}
+
+function makeCrate(z) {
+  const crate = new THREE.Group();
+
+  const box = makeBox(1.0, .75, 1.0, materials.crate);
+  crate.add(box);
+
+  const band1 = makeBox(.12,.82,1.08,materials.crateBand);
+  band1.position.x = -.28;
+  crate.add(band1);
+
+  const band2 = makeBox(.12,.82,1.08,materials.crateBand);
+  band2.position.x = .28;
+  crate.add(band2);
+
+  const band3 = makeBox(1.08,.84,.12,materials.crateBand);
+  band3.position.z = -.28;
+  crate.add(band3);
+
+  const band4 = makeBox(1.08,.84,.12,materials.crateBand);
+  band4.position.z = .28;
+  crate.add(band4);
+
+  crate.position.set(rand(-3.4,3.4), .45, z);
+  crate.userData = { type:"crate", collected:false };
+  world.add(crate);
+  state.objects.push(crate);
+}
+
+function makeLog(z) {
+  const log = makeCylinder(.23,.25,1.9,12,materials.log);
+  log.rotation.z = Math.PI/2;
+  log.rotation.y = rand(-.7,.7);
+  log.position.set(rand(-4.3,4.3), .22, z);
+  log.userData = { type:"log", hit:false };
+  world.add(log);
+  state.objects.push(log);
+}
+
+function makeRock(z) {
+  const rock = makeCylinder(.55,.75,.45,7,materials.rock);
+  rock.scale.set(rand(.8,1.4), rand(.7,1.1), rand(.7,1.2));
+  rock.rotation.y = rand(0,Math.PI);
+  rock.position.set(rand(-4.6,4.6), .12, z);
+  rock.userData = { type:"rock", hit:false };
+  world.add(rock);
+  state.objects.push(rock);
+}
+
+function makeBird() {
+  const bird = new THREE.Group();
+  const body = makeCylinder(.07,.12,.45,8,materials.bird);
+  body.rotation.x = Math.PI/2;
+  bird.add(body);
+
+  const wingL = makeBox(.55,.035,.14,materials.bird);
+  wingL.position.x = -.34;
+  bird.add(wingL);
+
+  const wingR = makeBox(.55,.035,.14,materials.bird);
+  wingR.position.x = .34;
+  bird.add(wingR);
+
+  bird.position.set(rand(-7,7), rand(5,8), rand(-120,-25));
+  bird.userData = { speed: rand(.018,.035), flap: rand(0,10) };
+  world.add(bird);
+  state.birds.push(bird);
+}
+
+function initWorld() {
+  makeWater();
+  makeTerrain();
+  makeRuins();
+  for (let i=0;i<8;i++) makeBird();
+}
+
+initWorld();
+
+function resetGame() {
+  for (const o of state.objects) world.remove(o);
+  state.objects = [];
+  state.distance = 0;
+  state.delivered = 0;
+  state.speed = .14;
+  state.targetSpeed = .14;
+  state.lane = 0;
+  state.targetLane = 0;
+  state.nextCrate = 140;
+  state.crateIndex = 0;
+  state.mode = "play";
+  overlay.style.display = "none";
+  showMessage("Jungle Sector 1: slow water. Deliver 3 crates and enjoy the river.", 280);
+}
+
+overlay.addEventListener("pointerdown", () => {
+  if (state.mode !== "play") resetGame();
+});
+
+window.addEventListener("keydown", e => {
+  state.input[e.key.toLowerCase()] = true;
+  if (e.key === "Enter" && state.mode !== "play") resetGame();
+  if ([" ","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+});
+
+window.addEventListener("keyup", e => {
+  state.input[e.key.toLowerCase()] = false;
+});
+
+let touchStart = null;
+const stick = document.getElementById("stick");
+stick.addEventListener("pointerdown", e => {
+  touchStart = {x:e.clientX,y:e.clientY};
+  stick.setPointerCapture(e.pointerId);
+});
+stick.addEventListener("pointermove", e => {
+  if (!touchStart) return;
+  state.touchSteer = clamp((e.clientX - touchStart.x)/65, -1, 1);
+});
+stick.addEventListener("pointerup", () => { touchStart = null; state.touchSteer = 0; });
+stick.addEventListener("pointercancel", () => { touchStart = null; state.touchSteer = 0; });
+
+const boost = document.getElementById("boost");
+boost.addEventListener("pointerdown", e => {
+  state.boost = true;
+  boost.setPointerCapture(e.pointerId);
+});
+boost.addEventListener("pointerup", () => state.boost = false);
+boost.addEventListener("pointercancel", () => state.boost = false);
+
+function updateGame() {
+  hideMessageTick();
+  if (state.mode !== "play") return;
+
+  let steer = state.touchSteer;
+  if (state.input["a"] || state.input["arrowleft"]) steer -= 1;
+  if (state.input["d"] || state.input["arrowright"]) steer += 1;
+
+  if (state.input["w"] || state.input["arrowup"]) state.targetSpeed += .0018;
+  if (state.input["s"] || state.input["arrowdown"]) state.targetSpeed -= .0022;
+
+  const boosting = (state.input[" "] || state.boost);
+  state.targetSpeed = clamp(state.targetSpeed, .08, boosting ? .27 : .20);
+  state.speed = lerp(state.speed, state.targetSpeed, .025);
+
+  state.targetLane = clamp(state.targetLane + steer*.025, -4.5, 4.5);
+  state.lane = lerp(state.lane, state.targetLane, .08);
+  boat.position.x = state.lane;
+  boat.rotation.z = lerp(boat.rotation.z, -steer*.08, .08);
+  boat.rotation.x = Math.sin(performance.now()*.003)*.018;
+
+  const move = state.speed;
+  state.distance += move * 3.2;
+
+  // Move all river objects toward the camera.
+  for (const obj of [...state.objects]) {
+    obj.position.z += move * 5.7;
+    obj.rotation.y += obj.userData.type === "crate" ? .005 : 0;
+
+    const dx = Math.abs(obj.position.x - boat.position.x);
+    const dz = Math.abs(obj.position.z - boat.position.z);
+
+    if (dz < 1.5 && dx < 1.25 && !obj.userData.collected && !obj.userData.hit) {
+      if (obj.userData.type === "crate") {
+        obj.userData.collected = true;
+        state.delivered++;
+        world.remove(obj);
+        state.objects = state.objects.filter(o => o !== obj);
+        showMessage(`Supply delivered: ${state.delivered} of 3.`, 180);
+      } else {
+        obj.userData.hit = true;
+        showMessage("Easy scrape. Steer gently around river hazards.", 140);
+      }
+    }
+
+    if (obj.position.z > 10) {
+      world.remove(obj);
+      state.objects = state.objects.filter(o => o !== obj);
+    }
+  }
+
+  // Recycle jungle.
+  for (const tr of state.trees) {
+    tr.position.z += move * 5.7;
+    if (tr.position.z > 18) {
+      tr.position.z = -155;
+      tr.position.x = Math.random()<.5 ? rand(-10.5,-6.5) : rand(6.5,10.5);
+      tr.scale.setScalar(rand(.85,1.35));
+    }
+  }
+
+  for (const r of state.ripples) {
+    r.position.z += move * 6.4 + r.userData.speed;
+    if (r.position.z > 11) {
+      r.position.z = -155;
+      r.position.x = rand(-6,6);
+    }
+  }
+
+  for (const b of state.birds) {
+    b.position.z += move * 2.4 + b.userData.speed;
+    b.position.x += Math.sin(performance.now()*.001 + b.userData.flap)*.01;
+    b.children[1].rotation.z = Math.sin(performance.now()*.008 + b.userData.flap)*.35;
+    b.children[2].rotation.z = -Math.sin(performance.now()*.008 + b.userData.flap)*.35;
+    if (b.position.z > 10) {
+      b.position.z = rand(-150,-40);
+      b.position.x = rand(-7,7);
+      b.position.y = rand(5,8);
+    }
+  }
+
+  // Spawn only three crates, with long scenic gaps.
+  if (state.delivered < 3 && state.distance > state.nextCrate && !state.objects.some(o => o.userData.type === "crate")) {
+    makeCrate(-120);
+    state.crateIndex++;
+    state.nextCrate += 430 + Math.random()*120;
+    showMessage("Supply crate ahead. Line up with it and cruise through.", 190);
+  }
+
+  // Gentle hazards after the first crate.
+  if (state.distance > 520 && Math.random() < .006 && state.objects.filter(o => o.userData.type !== "crate").length < 4) {
+    Math.random() < .5 ? makeLog(-125) : makeRock(-125);
+  }
+
+  if (state.delivered >= 3 && state.distance > 1600) {
+    state.mode = "win";
     overlay.style.display = "grid";
-    panel.innerHTML = win
-      ? `<h1>Delivery Complete</h1><p>You delivered the crates and reached the Amazon outpost.</p><p><b>Press Enter or tap to cruise again.</b></p>`
-      : `<h1>Boat Disabled</h1><p>The boat took too much damage. The river is meant to be read slowly: avoid hazards early and save boost for emergencies.</p><p><b>Press Enter or tap to try again.</b></p>`;
+    panel.innerHTML = `<h1>Delivery Complete</h1><p>You delivered all three supply crates and reached the river outpost.</p><p><b>Press Enter or tap to cruise again.</b></p>`;
   }
 
-  addEventListener("keydown", e => {
-    input[e.key.toLowerCase()] = true;
-    if (e.key === "Enter" && state.mode !== "play") reset();
-    if ([" ","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
-  });
-  addEventListener("keyup", e => input[e.key.toLowerCase()] = false);
-  overlay.addEventListener("pointerdown", () => { if (state.mode !== "play") reset(); });
-
-  const stick = document.getElementById("stick");
-  let startTouch = null;
-  stick.addEventListener("pointerdown", e => {
-    startTouch = {x:e.clientX,y:e.clientY};
-    stick.setPointerCapture(e.pointerId);
-  });
-  stick.addEventListener("pointermove", e => {
-    if (!startTouch) return;
-    state.steer = clamp((e.clientX-startTouch.x)/60, -1, 1);
-    state.boatDepth = clamp(state.boatDepth + (e.clientY-startTouch.y)/3200, .69, .87);
-  });
-  stick.addEventListener("pointerup", () => { startTouch=null; state.steer=0; });
-  stick.addEventListener("pointercancel", () => { startTouch=null; state.steer=0; });
-
-  const boostBtn = document.getElementById("boost");
-  boostBtn.addEventListener("pointerdown", e => { state.boost=true; boostBtn.setPointerCapture(e.pointerId); });
-  boostBtn.addEventListener("pointerup", () => state.boost=false);
-  boostBtn.addEventListener("pointercancel", () => state.boost=false);
-
-  function zone() {
-    if (state.distance < 1300) return "Jungle Sector 1";
-    if (state.distance < 2600) return "Ruins Bend";
-    if (state.distance < 3900) return "Green Narrows";
-    return "Outpost Approach";
-  }
-
-  function project(lane,z) {
-    const horizon = H*.34;
-    const depth = 1-z;
-    const curve = Math.sin(state.distance*.001 + z*4.2) * W*.042;
-    const center = W*.5 + curve;
-    const riverW = lerp(W*.12, W*1.06, depth);
-    const y = lerp(horizon, H*.95, depth*depth);
-    return {x:center + lane*riverW*.43, y, scale:lerp(.07,1.92,depth*depth), riverW, depth};
-  }
-
-  function labelFor(type) {
-    return {
-      crate:"Supply Crate",
-      rock:"River Rock",
-      log:"Floating Log",
-      croc:"Crocodile",
-      sandbar:"Sandbar",
-      ruin:"Stone Ruin"
-    }[type] || type;
-  }
-
-  function spawnObject(type, lane, z=1.04) {
-    const sizes = { crate:.082, rock:.105, log:.13, croc:.12, sandbar:.17, ruin:.18 };
-    state.objects.push({
-      type,
-      lane,
-      z,
-      w:sizes[type] || .1,
-      hit:false,
-      drift:type==="croc" ? rand(-.0007,.0007) : 0
-    });
-  }
-
-  function spawn() {
-    const d = state.distance;
-
-    // Only 3 supply crates, spaced apart.
-    if (state.delivered < state.target && d > state.nextCrateAt && !state.objects.some(o => o.type==="crate")) {
-      spawnObject("crate", rand(-.62,.62), 1.05);
-      state.nextCrateAt += rand(1050,1350);
-    }
-
-    // Calm first stretch.
-    if (d < 850) {
-      if (state.t % 300 === 0) spawnObject("log", rand(-.74,.74));
-      return;
-    }
-
-    const challenge = clamp((d-850)/3600, .15, 1);
-
-    // Fewer hazards, with space between them.
-    if (Math.random() < .0045 + challenge*.006) {
-      const pool = d < 1600 ? ["log","rock","sandbar"] :
-                   d < 3000 ? ["log","rock","sandbar","croc"] :
-                   ["log","rock","sandbar","croc","ruin"];
-      const type = pool[Math.floor(rand(0,pool.length))];
-      spawnObject(type, rand(-.80,.80));
-    }
-  }
-
-  function update() {
-    state.t++;
-
-    if (state.msgTimer > 0) {
-      state.msgTimer--;
-      if (state.msgTimer <= 0) msg.style.opacity = 0;
-    }
-
-    if (state.mode !== "play") return;
-
-    let steerTarget = 0;
-    let depthMove = 0;
-    if (input["arrowleft"] || input["a"]) steerTarget -= 1;
-    if (input["arrowright"] || input["d"]) steerTarget += 1;
-    if (input["arrowup"] || input["w"]) depthMove -= 1;
-    if (input["arrowdown"] || input["s"]) depthMove += 1;
-
-    state.steer = lerp(state.steer, steerTarget, .09);
-    state.lane = clamp(state.lane + state.steer*.0095, -1, 1);
-    state.boatDepth = clamp(state.boatDepth + depthMove*.0035, .69, .87);
-
-    const boost = (input[" "] || state.boost) && state.fuel > 0;
-    const cruise = state.distance < 1300 ? .36 : state.distance < 2700 ? .43 : .50;
-    state.speed = lerp(state.speed, boost ? cruise*1.42 : cruise, .03);
-
-    state.fuel = clamp(state.fuel + (boost ? -.22 : .035), 0, 100);
-    state.engine = clamp(70 + state.speed*50, 0, 100);
-
-    const flow = 2.05 * state.speed;
-    state.distance += flow;
-
-    if (state.inv > 0) state.inv--;
-
-    if (state.distance > 850 && state.tutorial === 0) {
-      state.tutorial = 1;
-      say("The river is getting busier. Watch for logs, rocks, and sandbars. No rush.", 260);
-    }
-    if (state.distance > 2300 && state.tutorial === 1) {
-      state.tutorial = 2;
-      say("Ruins Bend: crocodiles may appear, but hazards are spaced out. Steer early.", 260);
-    }
-    if (state.delivered >= state.target && state.tutorial < 3) {
-      state.tutorial = 3;
-      say("All crates delivered. Follow the river to the outpost.", 240);
-    }
-
-    spawn();
-
-    for (const o of state.objects) {
-      o.z -= .0044 * state.speed;
-      if (o.type === "croc") o.lane += o.drift;
-
-      const hitWindow = o.z < .19 && o.z > .055;
-      const closeLane = Math.abs(o.lane - state.lane);
-      if (!o.hit && hitWindow && closeLane < (o.type==="crate" ? .155 : .115)) {
-        o.hit = true;
-        if (o.type === "crate") {
-          state.delivered++;
-          state.fuel = clamp(state.fuel + 24,0,100);
-          state.hull = clamp(state.hull + 12,0,100);
-          splash(0,state.boatDepth,26,"#ffe68a");
-          say(`Supply delivered: ${state.delivered} of ${state.target}.`, 170);
-        } else if (state.inv <= 0) {
-          const damage = o.type==="sandbar" ? 5 : o.type==="croc" ? 10 : 7;
-          state.hull -= damage;
-          state.inv = 82;
-          state.shake = 11;
-          splash(0,state.boatDepth,26,"#eaffff");
-          say(`${labelFor(o.type)} scraped the boat. Slow and steady.`, 150);
-        }
-      }
-    }
-
-    state.objects = state.objects.filter(o => o.z > -.08 && !o.hit);
-
-    for (const tr of state.trees) {
-      tr.z -= .0024 * state.speed;
-      if (tr.z <= 0) Object.assign(tr, makeTree(1));
-    }
-
-    for (const b of state.birds) {
-      b.x += b.v;
-      b.flap += .08;
-      if (b.x > W+40) {
-        b.x = -60;
-        b.y = rand(H*.1,H*.32);
-      }
-    }
-
-    for (const m of state.mist) {
-      m.x += m.v;
-      if (m.x > W + m.w) m.x = -m.w;
-    }
-
-    if (state.t % 10 === 0) splash(rand(-.055,.055),state.boatDepth+.035,1,"#dcffff");
-
-    for (const p of state.splashes) {
-      p.life--;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += .055;
-    }
-    state.splashes = state.splashes.filter(p => p.life > 0);
-
-    if (state.hull <= 0) finish(false);
-    if (state.distance > 4800 && state.delivered >= state.target) finish(true);
-
-    objectiveEl.textContent = state.delivered < state.target ? "Deliver 3 supply crates to the outpost." : "All crates delivered. Reach the outpost.";
-    deliveredEl.textContent = `${state.delivered} / ${state.target}`;
-    distanceEl.textContent = `${Math.floor(state.distance)} m`;
-    speedEl.textContent = state.speed < .42 ? "Calm" : state.speed < .52 ? "Cruising" : "Boosting";
-    zoneEl.textContent = zone();
-    engineBar.style.width = state.engine + "%";
-    hullBar.style.width = clamp(state.hull,0,100) + "%";
-    fuelBar.style.width = state.fuel + "%";
-  }
-
-  function splash(nx,ny,count,color) {
-    for (let i=0;i<count;i++) {
-      state.splashes.push({
-        x: W*(.5+nx) + state.lane*W*.18 + rand(-18,18),
-        y: H*ny + rand(-8,8),
-        vx: rand(-1.7,1.7),
-        vy: rand(-2.4,.3),
-        r: rand(1.8,5.5),
-        life: rand(18,36),
-        color
-      });
-    }
-  }
-
-  function roundRect(x,y,w,h,r) {
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
-  }
-
-  function drawSky() {
-    const g = ctx.createLinearGradient(0,0,0,H*.62);
-    g.addColorStop(0,"#f3b45d");
-    g.addColorStop(.25,"#bfe6cd");
-    g.addColorStop(.56,"#34784b");
-    g.addColorStop(1,"#0b2617");
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,W,H);
-
-    ctx.fillStyle = "rgba(255,238,165,.74)";
-    ctx.beginPath();
-    ctx.arc(W*.72,H*.16,Math.min(W,H)*.064,0,Math.PI*2);
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(255,255,255,.50)";
-    ctx.lineWidth = 2;
-    for (const b of state.birds) {
-      const flap = Math.sin(b.flap)*8*b.s;
-      ctx.beginPath();
-      ctx.moveTo(b.x - 9*b.s, b.y);
-      ctx.quadraticCurveTo(b.x, b.y - flap, b.x + 9*b.s, b.y);
-      ctx.stroke();
-    }
-  }
-
-  function drawJungle() {
-    ctx.fillStyle = "#0a2413";
-    ctx.beginPath();
-    ctx.moveTo(0,H*.34);
-    for (let x=0;x<=W;x+=24) {
-      ctx.lineTo(x, H*.33 + Math.sin(x*.026+state.distance*.002)*18);
-    }
-    ctx.lineTo(W,H*.55);
-    ctx.lineTo(0,H*.55);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "#061d10";
-    ctx.beginPath();
-    ctx.moveTo(0,H*.34);
-    ctx.bezierCurveTo(W*.26,H*.41,W*.12,H*.76,0,H);
-    ctx.lineTo(0,H*.34);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(W,H*.34);
-    ctx.bezierCurveTo(W*.74,H*.41,W*.88,H*.76,W,H);
-    ctx.lineTo(W,H*.34);
-    ctx.fill();
-
-    // temple ruin on right bank, inspired by the logo
-    const ruinShift = Math.sin(state.distance*.0007)*18;
-    ctx.save();
-    ctx.translate(W*.78 + ruinShift, H*.38);
-    ctx.globalAlpha = .72;
-    ctx.fillStyle = "#5e604d";
-    for (let i=0;i<6;i++) {
-      ctx.fillRect(i*-10, i*18, 160-i*20, 18);
-    }
-    ctx.fillStyle = "#424638";
-    ctx.fillRect(8, 30, 42, 78);
-    ctx.fillRect(70, 44, 35, 62);
-    ctx.fillStyle = "rgba(50,90,38,.8)";
-    ctx.fillRect(-8, 10, 130, 10);
-    ctx.restore();
-
-    const sorted = [...state.trees].sort((a,b)=>b.z-a.z);
-    for (const t of sorted) drawTree(t);
-
-    for (const m of state.mist) {
-      ctx.fillStyle = "rgba(222,255,226,.08)";
-      ctx.beginPath();
-      ctx.ellipse(m.x,m.y,m.w,m.h,0,0,Math.PI*2);
-      ctx.fill();
-    }
-  }
-
-  function drawTree(t) {
-    const p = project(t.side*t.x,t.z);
-    const s = t.size*p.scale*65;
-    if (s < 3) return;
-
-    ctx.save();
-    ctx.translate(p.x,p.y);
-    ctx.rotate(t.lean*.2);
-    ctx.fillStyle = "#5a3820";
-    ctx.fillRect(-s*.04, -s*.1, s*.08, s*.7);
-
-    const colors = t.kind < .33 ? ["#0b3d1e","#12692e","#238343"] :
-                   t.kind < .66 ? ["#153b1e","#1e7034","#3c9a48"] :
-                   ["#18391c","#4a8e35","#86a64a"];
-
-    for (let i=0;i<5;i++) {
-      ctx.fillStyle = colors[i%colors.length];
-      ctx.beginPath();
-      ctx.ellipse(rand(-s*.28,s*.28), -s*.18-i*s*.11, s*rand(.26,.54), s*rand(.18,.38), rand(-.5,.5), 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    if (t.vine) {
-      ctx.strokeStyle = "rgba(121,196,76,.58)";
-      ctx.lineWidth = Math.max(1,s*.015);
-      ctx.beginPath();
-      ctx.moveTo(s*.12,-s*.58);
-      ctx.bezierCurveTo(-s*.06,-s*.18,s*.22,s*.18,-s*.02,s*.58);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  function drawRiver() {
-    const horizon = H*.34;
-    const g = ctx.createLinearGradient(0,horizon,0,H);
-    g.addColorStop(0,"#2a997f");
-    g.addColorStop(.5,"#176f70");
-    g.addColorStop(1,"#083d53");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(W*.43,horizon);
-    ctx.lineTo(W*.57,horizon);
-    ctx.lineTo(W,H);
-    ctx.lineTo(0,H);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(255,222,135,.20)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(W*.43,horizon);
-    ctx.bezierCurveTo(W*.32,H*.52,W*.18,H*.78,0,H);
-    ctx.moveTo(W*.57,horizon);
-    ctx.bezierCurveTo(W*.68,H*.52,W*.82,H*.78,W,H);
-    ctx.stroke();
-
-    for (let i=0;i<52;i++) {
-      const z = ((i/52 + (state.distance*.00032)%1)%1);
-      const p = project(Math.sin(i*7.91)*.52,z);
-      ctx.strokeStyle = `rgba(225,255,250,${.045+p.depth*.18})`;
-      ctx.lineWidth = 1+p.scale*1.5;
-      ctx.beginPath();
-      ctx.moveTo(p.x-p.riverW*.12,p.y);
-      ctx.quadraticCurveTo(p.x,p.y+8*p.scale,p.x+p.riverW*.12,p.y);
-      ctx.stroke();
-    }
-  }
-
-  function drawObject(o) {
-    const p = project(o.lane,o.z);
-    const s = p.scale*W*o.w;
-    if (s < 4) return;
-
-    if (o.type === "crate") {
-      ctx.save();
-      ctx.translate(p.x,p.y);
-      ctx.rotate(Math.sin(state.t*.025+o.z)*.08);
-      ctx.fillStyle = "#cf9131";
-      roundRect(-s*.48,-s*.36,s*.96,s*.72,s*.08);
-      ctx.fill();
-      ctx.strokeStyle = "#ffeda5";
-      ctx.lineWidth = Math.max(2,s*.05);
-      ctx.stroke();
-      ctx.strokeStyle = "#fff1b0";
-      ctx.beginPath();
-      ctx.moveTo(0,-s*.36); ctx.lineTo(0,s*.36);
-      ctx.moveTo(-s*.48,0); ctx.lineTo(s*.48,0);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(35,55,25,.55)";
-      ctx.beginPath();
-      ctx.arc(0,0,s*.15,0,Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-      drawSmallLabel("SUPPLY",p.x,p.y-s*.48,p.scale,true);
-      return;
-    }
-
-    if (o.type === "rock") {
-      ctx.fillStyle = "#626b64";
-      ctx.beginPath();
-      ctx.ellipse(p.x,p.y,s*.52,s*.34,0,0,Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#9da294";
-      ctx.beginPath();
-      ctx.ellipse(p.x-s*.15,p.y-s*.09,s*.18,s*.1,0,0,Math.PI*2);
-      ctx.fill();
-      return;
-    }
-
-    if (o.type === "sandbar") {
-      ctx.fillStyle = "rgba(210,180,105,.7)";
-      ctx.beginPath();
-      ctx.ellipse(p.x,p.y,s*.86,s*.26,0,0,Math.PI*2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,235,170,.35)";
-      ctx.stroke();
-      return;
-    }
-
-    if (o.type === "croc") {
-      ctx.fillStyle = "#1d5627";
-      ctx.beginPath();
-      ctx.ellipse(p.x,p.y,s*.78,s*.22,0,0,Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#113b1c";
-      ctx.beginPath();
-      ctx.ellipse(p.x+s*.24,p.y-s*.015,s*.3,s*.13,0,0,Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#f7e487";
-      ctx.beginPath();
-      ctx.arc(p.x-s*.18,p.y-s*.05,Math.max(2,s*.04),0,Math.PI*2);
-      ctx.arc(p.x+s*.17,p.y-s*.05,Math.max(2,s*.04),0,Math.PI*2);
-      ctx.fill();
-      return;
-    }
-
-    if (o.type === "ruin") {
-      ctx.fillStyle = "#696b55";
-      ctx.save();
-      ctx.translate(p.x,p.y);
-      ctx.rotate(.15);
-      for (let i=0;i<3;i++) ctx.fillRect(-s*.45+i*s*.2,-s*.25+i*s*.1,s*.34,s*.16);
-      ctx.restore();
-      return;
-    }
-
-    // log
-    ctx.save();
-    ctx.translate(p.x,p.y);
-    ctx.rotate(Math.sin(state.t*.012+o.z)*.45);
-    ctx.fillStyle = "#774820";
-    roundRect(-s*.72,-s*.13,s*1.44,s*.26,s*.13);
-    ctx.fill();
-    ctx.fillStyle = "#b77a39";
-    ctx.beginPath();
-    ctx.arc(-s*.72,0,s*.13,0,Math.PI*2);
-    ctx.arc(s*.72,0,s*.13,0,Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawSmallLabel(text,x,y,scale,good) {
-    if (scale < .45) return;
-    ctx.save();
-    ctx.font = `${Math.max(11,12*scale)}px system-ui`;
-    ctx.textAlign = "center";
-    const pad = 7*scale;
-    const w = ctx.measureText(text).width + pad*2;
-    const h = 20*scale;
-    ctx.fillStyle = good ? "rgba(20,88,40,.74)" : "rgba(100,28,18,.74)";
-    roundRect(x-w/2,y-h,w,h,8*scale);
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.fillText(text,x,y-h*.32);
-    ctx.restore();
-  }
-
-  function drawBoat() {
-    const x = W*.5 + state.lane*W*.18;
-    const y = H*state.boatDepth;
-    const s = Math.min(W,H)*.195;
-
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(state.steer*.08);
-    if (state.inv && Math.floor(state.inv/6)%2===0) ctx.globalAlpha = .62;
-
-    ctx.fillStyle = "rgba(0,0,0,.34)";
-    ctx.beginPath();
-    ctx.ellipse(0,s*.38,s*.42,s*.15,0,0,Math.PI*2);
-    ctx.fill();
-
-    ctx.fillStyle = "#5c2f1d";
-    ctx.beginPath();
-    ctx.moveTo(0,-s*.66);
-    ctx.lineTo(s*.36,-s*.17);
-    ctx.lineTo(s*.30,s*.56);
-    ctx.quadraticCurveTo(0,s*.76,-s*.30,s*.56);
-    ctx.lineTo(-s*.36,-s*.17);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "#b57435";
-    ctx.beginPath();
-    ctx.moveTo(0,-s*.51);
-    ctx.lineTo(s*.24,-s*.12);
-    ctx.lineTo(s*.20,s*.42);
-    ctx.quadraticCurveTo(0,s*.56,-s*.20,s*.42);
-    ctx.lineTo(-s*.24,-s*.12);
-    ctx.closePath();
-    ctx.fill();
-
-    // roof canopy
-    ctx.fillStyle = "#d5bd75";
-    ctx.beginPath();
-    ctx.moveTo(-s*.28,-s*.28);
-    ctx.lineTo(s*.28,-s*.28);
-    ctx.lineTo(s*.22,s*.02);
-    ctx.lineTo(-s*.22,s*.02);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "#5a3a22";
-    ctx.lineWidth = Math.max(2,s*.02);
-    ctx.stroke();
-
-    // cargo barrels
-    ctx.fillStyle = "#4f5a42";
-    ctx.fillRect(-s*.18,s*.08,s*.13,s*.16);
-    ctx.fillRect(s*.06,s*.08,s*.13,s*.16);
-    ctx.fillStyle = "#24323a";
-    ctx.fillRect(-s*.07,s*.28,s*.14,s*.17);
-
-    // motor
-    ctx.fillStyle = "#1f2527";
-    roundRect(-s*.08,s*.52,s*.16,s*.18,s*.025);
-    ctx.fill();
-
-    ctx.restore();
-
-    // wake
-    ctx.strokeStyle = "rgba(230,255,255,.52)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x-22,y+s*.37);
-    ctx.bezierCurveTo(W*.38,y+s*.50,W*.32,H*.96,W*.18,H*1.06);
-    ctx.moveTo(x+22,y+s*.37);
-    ctx.bezierCurveTo(W*.62,y+s*.50,W*.68,H*.96,W*.82,H*1.06);
-    ctx.stroke();
-  }
-
-  function drawSplashes() {
-    for (const p of state.splashes) {
-      ctx.globalAlpha = clamp(p.life/30,0,1);
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function drawVignette() {
-    const g = ctx.createRadialGradient(W/2,H*.54,Math.min(W,H)*.12,W/2,H*.54,Math.max(W,H)*.76);
-    g.addColorStop(0,"rgba(0,0,0,0)");
-    g.addColorStop(1,"rgba(0,0,0,.52)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,W,H);
-  }
-
-  function draw() {
-    ctx.save();
-    if (state.shake > 0) {
-      ctx.translate(rand(-state.shake,state.shake),rand(-state.shake,state.shake));
-      state.shake *= .88;
-      if (state.shake < .4) state.shake = 0;
-    }
-
-    drawSky();
-    drawJungle();
-    drawRiver();
-    [...state.objects].sort((a,b)=>b.z-a.z).forEach(drawObject);
-    drawSplashes();
-    drawBoat();
-    drawVignette();
-
-    ctx.restore();
-  }
-
-  function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
-  }
-  loop();
-})();
+  camera.position.x = lerp(camera.position.x, boat.position.x * .42, .035);
+  camera.position.y = 4.7 + Math.sin(performance.now()*.0012)*.04;
+  camera.position.z = 8.7;
+  camera.lookAt(boat.position.x * .2, .75, -7.5);
+
+  deliveredEl.textContent = `${state.delivered} / 3`;
+  distanceEl.textContent = `${Math.floor(state.distance)} m`;
+  speedEl.textContent = state.speed < .13 ? "Calm" : state.speed < .2 ? "Cruising" : "Boost";
+  zoneEl.textContent = state.distance < 650 ? "Jungle Sector 1" : state.distance < 1250 ? "Ruins Bend" : "Outpost Approach";
+}
+
+function animate() {
+  updateGame();
+  renderer.render(scene,camera);
+  requestAnimationFrame(animate);
+}
+
+animate();
 </script>
 </body>
 </html>
