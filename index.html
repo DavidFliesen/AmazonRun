@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Amazon Run — Jungle River Rescue</title>
+<style>
+  :root {
+    --gold: #ffd76e;
+    --green: #5cf09a;
+    --danger: #ff6b5f;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #04140c;
+    color: white;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    touch-action: none;
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    background: #04140c;
+  }
+
+  #overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at center, rgba(10,45,25,.24), rgba(0,0,0,.58));
+    pointer-events: auto;
+  }
+
+  .panel {
+    max-width: 850px;
+    margin: 24px;
+    padding: 32px 36px;
+    border-radius: 28px;
+    background:
+      linear-gradient(180deg, rgba(6,28,17,.92), rgba(3,12,8,.86)),
+      radial-gradient(circle at top, rgba(255,215,110,.14), transparent 55%);
+    border: 1px solid rgba(255,230,150,.32);
+    box-shadow: 0 28px 90px rgba(0,0,0,.62);
+    backdrop-filter: blur(10px);
+  }
+
+  .panel h1 {
+    margin: 0 0 8px;
+    font-size: clamp(42px, 7vw, 78px);
+    line-height: .95;
+    color: var(--gold);
+    text-shadow: 0 5px 0 rgba(0,0,0,.2);
+    text-align: center;
+  }
+
+  .panel h2 {
+    margin: 20px 0 8px;
+    color: #9ff3be;
+    font-size: 22px;
+  }
+
+  .panel p {
+    margin: 9px 0;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.4;
+    color: #eefbea;
+  }
+
+  .missionGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .card {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.075);
+    border: 1px solid rgba(255,255,255,.12);
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .card b {
+    color: #ffd76e;
+  }
+
+  .start {
+    margin-top: 20px;
+    text-align: center;
+    color: #fff;
+    font-size: 22px !important;
+  }
+
+  #hud {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+    text-shadow: 0 2px 6px #000;
+    font-weight: 750;
+  }
+
+  .hudBox {
+    background: rgba(2,14,8,.56);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 16px;
+    padding: 12px 14px;
+    min-width: 250px;
+    backdrop-filter: blur(7px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  }
+
+  #objective {
+    color: #ffe7a0;
+    margin-bottom: 7px;
+  }
+
+  .bar {
+    height: 10px;
+    width: 205px;
+    background: rgba(255,255,255,.17);
+    border-radius: 99px;
+    margin: 6px 0 8px;
+    overflow: hidden;
+  }
+
+  .fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 99px;
+  }
+
+  #toast {
+    position: fixed;
+    left: 50%;
+    top: 110px;
+    transform: translateX(-50%);
+    max-width: min(760px, calc(100vw - 40px));
+    padding: 13px 18px;
+    border-radius: 18px;
+    color: white;
+    background: rgba(3,17,10,.72);
+    border: 1px solid rgba(255,230,150,.26);
+    box-shadow: 0 14px 40px rgba(0,0,0,.35);
+    backdrop-filter: blur(8px);
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity .25s;
+    pointer-events: none;
+    text-shadow: 0 2px 4px black;
+  }
+
+  #mobile {
+    position: fixed;
+    inset: auto 0 20px 0;
+    display: none;
+    justify-content: space-between;
+    padding: 0 22px;
+    pointer-events: none;
+  }
+
+  .stick, .boost {
+    pointer-events: auto;
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+    border: 2px solid rgba(255,255,255,.28);
+    backdrop-filter: blur(6px);
+    display: grid;
+    place-items: center;
+    color: white;
+    font-weight: 850;
+    user-select: none;
+  }
+
+  .boost {
+    background: rgba(255,185,64,.18);
+    border-color: rgba(255,218,120,.45);
+  }
+
+  @media (max-width: 720px) {
+    .missionGrid { grid-template-columns: 1fr; }
+    .panel { padding: 24px; }
+    #hud { font-size: 13px; }
+    .hudBox { min-width: 180px; }
+    .bar { width: 150px; }
+  }
+
+  @media (pointer: coarse) {
+    #mobile { display: flex; }
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="hudBox">
+    <div id="objective">Objective: Follow the river and collect supply crates.</div>
+    <div>Hull</div>
+    <div class="bar"><div id="hullBar" class="fill" style="background:linear-gradient(90deg,#ff4b4b,#ffc14b)"></div></div>
+    <div>Fuel</div>
+    <div class="bar"><div id="fuelBar" class="fill" style="background:linear-gradient(90deg,#35e487,#ffe46a)"></div></div>
+  </div>
+  <div class="hudBox" style="text-align:right">
+    <div id="score">Score: 0</div>
+    <div id="supplies">Supplies: 0 / 8</div>
+    <div id="biome">Training Waters</div>
+    <div id="distance">Distance: 0 m</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="overlay">
+  <div class="panel" id="panel">
+    <h1>Amazon Run</h1>
+    <p><b>Mission:</b> Pilot a rescue boat down the Amazon, gather supply crates, and reach the jungle extraction point.</p>
+    <p>This version starts calmly. The first stretch teaches you what objects mean before the river gets dangerous.</p>
+
+    <div class="missionGrid">
+      <div class="card"><b>Collect:</b> Yellow medical supply crates. They add fuel, repair a little hull damage, and move the mission forward.</div>
+      <div class="card"><b>Avoid:</b> Gray rocks, brown logs, green crocodiles, and red raider boats. These damage your hull.</div>
+      <div class="card"><b>Control:</b> A/D or ←/→ steer. W/S or ↑/↓ shift your boat up or downriver. Space boosts, but uses fuel.</div>
+      <div class="card"><b>Goal:</b> Collect 8 crates and survive to extraction. Early river = relaxed. Deep jungle = challenge.</div>
+    </div>
+
+    <p class="start"><b>Press Enter or tap to begin.</b></p>
+  </div>
+</div>
+
+<div id="mobile">
+  <div class="stick" id="stick">STEER</div>
+  <div class="boost" id="boost">BOOST</div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const overlay = document.getElementById("overlay");
+  const panel = document.getElementById("panel");
+  const toast = document.getElementById("toast");
+  const hullBar = document.getElementById("hullBar");
+  const fuelBar = document.getElementById("fuelBar");
+  const scoreEl = document.getElementById("score");
+  const suppliesEl = document.getElementById("supplies");
+  const biomeEl = document.getElementById("biome");
+  const distanceEl = document.getElementById("distance");
+  const objectiveEl = document.getElementById("objective");
+
+  let W = 0, H = 0, DPR = 1;
+
+  function resize() {
+    DPR = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth;
+    H = innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+
+  addEventListener("resize", resize);
+  resize();
+
+  const state = {
+    mode: "title",
+    t: 0,
+    distance: 0,
+    score: 0,
+    hull: 100,
+    fuel: 100,
+    supplies: 0,
+    targetSupplies: 8,
+    shake: 0,
+    speed: .62,
+    steering: 0,
+    lane: 0,
+    boatY: .78,
+    boost: false,
+    inv: 0,
+    objects: [],
+    spray: [],
+    banks: [],
+    birds: [],
+    ripples: [],
+    tutorialStep: 0,
+    lastToast: 0
+  };
+
+  const input = {};
+
+  function rand(a,b){return Math.random()*(b-a)+a;}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  function showToast(message, frames=220) {
+    toast.textContent = message;
+    toast.style.opacity = 1;
+    state.lastToast = frames;
+  }
+
+  function start() {
+    state.mode = "play";
+    overlay.style.display = "none";
+    Object.assign(state, {
+      distance: 0,
+      score: 0,
+      hull: 100,
+      fuel: 100,
+      supplies: 0,
+      shake: 0,
+      speed: .62,
+      steering: 0,
+      lane: 0,
+      boatY: .78,
+      inv: 0,
+      tutorialStep: 0,
+      lastToast: 0
+    });
+    state.objects = [];
+    state.spray = [];
+    state.banks = [];
+    state.birds = [];
+    state.ripples = [];
+
+    for (let i = 0; i < 170; i++) {
+      state.banks.push(makeTree(Math.random()));
+    }
+    for (let i = 0; i < 14; i++) {
+      state.birds.push({x: rand(0,W), y: rand(H*.08,H*.30), flap: rand(0,100), speed: rand(.15,.45)});
+    }
+
+    showToast("Training Waters: steer gently and collect yellow supply crates.", 260);
+  }
+
+  function makeTree(z=1) {
+    return {
+      side: Math.random() < .5 ? -1 : 1,
+      z,
+      x: rand(.47, 1.02),
+      size: rand(.8, 2.75),
+      kind: Math.random(),
+      lean: rand(-.25, .25),
+      vine: Math.random() < .22
+    };
+  }
+
+  function end(win) {
+    state.mode = win ? "win" : "dead";
+    overlay.style.display = "grid";
+    panel.innerHTML = win
+      ? `<h1>Extraction Complete</h1>
+         <p>You gathered the supplies and made it through the jungle river.</p>
+         <p>Final Score: <b>${state.score}</b></p>
+         <p class="start"><b>Press Enter or tap to run again.</b></p>`
+      : `<h1>Boat Disabled</h1>
+         <p>Your hull took too much damage. Try steering earlier and using boost only when you need a quick escape.</p>
+         <p>Final Score: <b>${state.score}</b></p>
+         <p class="start"><b>Press Enter or tap to try again.</b></p>`;
+  }
+
+  addEventListener("keydown", e => {
+    input[e.key.toLowerCase()] = true;
+    if (e.key === "Enter" && state.mode !== "play") start();
+    if ([" ","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+  });
+
+  addEventListener("keyup", e => input[e.key.toLowerCase()] = false);
+  overlay.addEventListener("pointerdown", () => { if (state.mode !== "play") start(); });
+
+  let touchStart = null;
+  const stick = document.getElementById("stick");
+  stick.addEventListener("pointerdown", e => {
+    touchStart = {x:e.clientX,y:e.clientY};
+    stick.setPointerCapture(e.pointerId);
+  });
+  stick.addEventListener("pointermove", e => {
+    if (!touchStart) return;
+    state.steering = clamp((e.clientX - touchStart.x) / 55, -1, 1);
+    state.boatY = clamp(state.boatY + (e.clientY - touchStart.y) / 2600, .68, .87);
+  });
+  stick.addEventListener("pointerup", () => { touchStart = null; state.steering = 0; });
+  stick.addEventListener("pointercancel", () => { touchStart = null; state.steering = 0; });
+
+  const boost = document.getElementById("boost");
+  boost.addEventListener("pointerdown", e => { state.boost = true; boost.setPointerCapture(e.pointerId); });
+  boost.addEventListener("pointerup", () => state.boost = false);
+  boost.addEventListener("pointercancel", () => state.boost = false);
+
+  function biome() {
+    if (state.distance < 900) return "Training Waters";
+    if (state.distance < 2100) return "Open Amazon";
+    if (state.distance < 3600) return "Jungle Channel";
+    return "Deep Jungle";
+  }
+
+  function objectiveText() {
+    if (state.distance < 900) return "Tutorial: collect crates. Hazards are light.";
+    if (state.supplies < state.targetSupplies) return "Objective: collect yellow supply crates.";
+    return "Objective: supplies secured. Reach extraction!";
+  }
+
+  function spawn() {
+    const d = state.distance;
+    const stage = biome();
+
+    // Tutorial section: only crates and a rare, slow log.
+    if (d < 900) {
+      if (state.t % 145 === 0) state.objects.push({type:"crate", z:1.02, lane:rand(-.55,.55), w:.092, hit:false, label:"Supply Crate"});
+      if (d > 360 && state.t % 260 === 0) state.objects.push({type:"log", z:1.02, lane:rand(-.65,.65), w:.12, hit:false, label:"Floating Log"});
+      return;
+    }
+
+    const danger = clamp((d - 900) / 3500, .18, 1.05);
+
+    if (Math.random() < .010 + danger*.010) {
+      const types = d < 1800 ? ["log","rock"] : d < 3300 ? ["log","rock","croc"] : ["log","rock","croc","snag"];
+      const type = types[Math.floor(rand(0, types.length))];
+      state.objects.push({
+        type,
+        z:1.03,
+        lane:rand(-.82,.82),
+        w:type === "snag" ? .14 : rand(.09,.145),
+        hit:false,
+        label: labelFor(type)
+      });
+    }
+
+    if (Math.random() < .013) {
+      state.objects.push({type:"crate", z:1.03, lane:rand(-.76,.76), w:.09, hit:false, label:"Supply Crate"});
+    }
+
+    if (d > 2300 && Math.random() < .0035 + danger*.0038) {
+      state.objects.push({
+        type:"raider",
+        z:1.08,
+        lane:rand(-.76,.76),
+        w:.115,
+        hit:false,
+        drift:rand(-.0016,.0016),
+        label:"Raider Boat"
+      });
+    }
+  }
+
+  function labelFor(type) {
+    return {
+      log: "Floating Log",
+      rock: "River Rock",
+      croc: "Crocodile",
+      snag: "Sharp Snag",
+      raider: "Raider Boat",
+      crate: "Supply Crate"
+    }[type] || "";
+  }
+
+  function update() {
+    state.t++;
+    if (state.lastToast > 0) {
+      state.lastToast--;
+      if (state.lastToast <= 0) toast.style.opacity = 0;
+    }
+
+    if (state.mode !== "play") return;
+
+    let steer = 0, vertical = 0;
+    if (input["arrowleft"] || input["a"]) steer -= 1;
+    if (input["arrowright"] || input["d"]) steer += 1;
+    if (input["arrowup"] || input["w"]) vertical -= 1;
+    if (input["arrowdown"] || input["s"]) vertical += 1;
+
+    state.steering = lerp(state.steering, steer, .10);
+    state.lane = clamp(state.lane + state.steering * .012, -1, 1);
+    state.boatY = clamp(state.boatY + vertical * .004, .68, .87);
+
+    const boosting = (input[" "] || state.boost) && state.fuel > 0;
+    const baseSpeed = state.distance < 900 ? .50 : state.distance < 2100 ? .62 : state.distance < 3600 ? .72 : .82;
+    state.speed = lerp(state.speed, boosting ? baseSpeed * 1.45 : baseSpeed, .035);
+    state.fuel = clamp(state.fuel + (boosting ? -.34 : .055), 0, 100);
+
+    const flow = 2.35 * state.speed;
+    state.distance += flow;
+    state.score = Math.floor(state.distance / 3) + state.supplies * 300;
+
+    if (state.inv > 0) state.inv--;
+
+    if (state.distance > 900 && state.tutorialStep === 0) {
+      state.tutorialStep = 1;
+      showToast("Open Amazon: hazards now appear. Aim for open water and avoid gray, brown, green, and red objects.", 300);
+    }
+    if (state.distance > 2300 && state.tutorialStep === 1) {
+      state.tutorialStep = 2;
+      showToast("Raider boats may chase you now. Save boost for quick escapes.", 300);
+    }
+    if (state.supplies >= state.targetSupplies && state.tutorialStep < 3) {
+      state.tutorialStep = 3;
+      showToast("Supplies secured! Stay alive until extraction.", 260);
+    }
+
+    spawn();
+
+    for (const o of state.objects) {
+      o.z -= .0055 * state.speed * (o.type === "raider" ? 1.08 : 1);
+      if (o.type === "raider") {
+        o.lane += o.drift + Math.sign(state.lane - o.lane) * .0012;
+      }
+
+      const hitWindow = o.z < .18 && o.z > .055;
+      const hitWidth = o.type === "crate" ? .16 : .125;
+      if (!o.hit && hitWindow && Math.abs(o.lane - state.lane) < hitWidth && Math.abs(state.boatY - .78) < .17) {
+        o.hit = true;
+        if (o.type === "crate") {
+          state.supplies++;
+          state.fuel = clamp(state.fuel + 14, 0, 100);
+          state.hull = clamp(state.hull + 6, 0, 100);
+          showToast("Supply crate collected: fuel and hull repaired.", 120);
+          splash(0, state.boatY, 22, "#ffe783");
+        } else if (state.inv <= 0) {
+          const damage = o.type === "raider" ? 16 : 9;
+          state.hull -= damage;
+          state.inv = 70;
+          state.shake = 16;
+          showToast(`${labelFor(o.type)} hit the hull. Damage: ${damage}`, 110);
+          splash(0, state.boatY, 34, "#e9ffff");
+        }
+      }
+    }
+
+    state.objects = state.objects.filter(o => o.z > -.07 && !o.hit);
+
+    for (const p of state.spray) {
+      p.life--;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += .075;
+    }
+    state.spray = state.spray.filter(p => p.life > 0);
+
+    for (const b of state.banks) {
+      b.z -= .0033 * state.speed;
+      if (b.z <= 0) Object.assign(b, makeTree(1));
+    }
+
+    for (const bird of state.birds) {
+      bird.x += bird.speed;
+      bird.flap += .09;
+      if (bird.x > W + 40) {
+        bird.x = -40;
+        bird.y = rand(H*.08, H*.3);
+      }
+    }
+
+    if (state.t % 6 === 0) splash(rand(-.07,.07), state.boatY + .04, boosting ? 3 : 1, "#dffcff");
+
+    if (state.hull <= 0) end(false);
+    if (state.distance > 5200 && state.supplies >= state.targetSupplies) end(true);
+
+    hullBar.style.width = clamp(state.hull,0,100) + "%";
+    fuelBar.style.width = clamp(state.fuel,0,100) + "%";
+    scoreEl.textContent = "Score: " + state.score;
+    suppliesEl.textContent = `Supplies: ${state.supplies} / ${state.targetSupplies}`;
+    biomeEl.textContent = biome();
+    distanceEl.textContent = "Distance: " + Math.floor(state.distance) + " m";
+    objectiveEl.textContent = objectiveText();
+  }
+
+  function splash(nx, ny, count, color) {
+    for (let i = 0; i < count; i++) {
+      state.spray.push({
+        x: W * (.5 + nx) + rand(-18,18),
+        y: H * ny + rand(-8,8),
+        vx: rand(-2,2),
+        vy: rand(-3,.3),
+        s: rand(2,6.5),
+        life: rand(16,34),
+        color
+      });
+    }
+  }
+
+  function project(lane, z) {
+    const horizon = H * .34;
+    const depth = 1 - z;
+    const curve = Math.sin(state.distance * .0013 + z * 4.5) * W * .045;
+    const center = W * .5 + curve;
+    const riverW = lerp(W * .13, W * 1.04, depth);
+    const y = lerp(horizon, H * .94, depth * depth);
+    return {
+      x: center + lane * riverW * .43,
+      y,
+      scale: lerp(.08, 1.9, depth * depth),
+      riverW,
+      depth
+    };
+  }
+
+  function drawSky() {
+    const g = ctx.createLinearGradient(0,0,0,H*.62);
+    g.addColorStop(0,"#f2a85b");
+    g.addColorStop(.25,"#7bc8b7");
+    g.addColorStop(.76,"#15583a");
+    g.addColorStop(1,"#092719");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = "rgba(255,235,160,.68)";
+    ctx.beginPath();
+    ctx.arc(W*.78,H*.15,Math.min(W,H)*.065,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,.45)";
+    ctx.lineWidth = 2;
+    for (const b of state.birds) {
+      const flap = Math.sin(b.flap) * 7;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 8, b.y);
+      ctx.quadraticCurveTo(b.x, b.y - flap, b.x + 8, b.y);
+      ctx.stroke();
+    }
+  }
+
+  function drawLayeredJungle() {
+    // distant tree wall
+    ctx.fillStyle = "#082111";
+    ctx.beginPath();
+    ctx.moveTo(0,H*.32);
+    for (let x=0; x<=W; x+=28) {
+      const y = H*.32 + Math.sin(x*.035 + state.distance*.003)*18 + rand(-2,2);
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W,H*.50);
+    ctx.lineTo(0,H*.50);
+    ctx.closePath();
+    ctx.fill();
+
+    // banks
+    ctx.fillStyle = "#062414";
+    ctx.beginPath();
+    ctx.moveTo(0,H*.34);
+    ctx.bezierCurveTo(W*.24,H*.42,W*.11,H*.75,0,H);
+    ctx.lineTo(0,H*.34);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(W,H*.34);
+    ctx.bezierCurveTo(W*.76,H*.42,W*.89,H*.75,W,H);
+    ctx.lineTo(W,H*.34);
+    ctx.fill();
+
+    const sorted = [...state.banks].sort((a,b)=>b.z-a.z);
+    for (const t of sorted) drawTree(t);
+  }
+
+  function drawTree(t) {
+    const p = project(t.side*t.x, t.z);
+    const s = t.size * p.scale * 62;
+    const trunkW = Math.max(3, s*.10);
+
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(t.lean * .25);
+
+    ctx.fillStyle = "#56341e";
+    ctx.fillRect(-trunkW/2, -s*.15, trunkW, s*.72);
+
+    const leafColors = t.kind < .33 ? ["#0b3b1d","#12642d","#1c7d38"] :
+                       t.kind < .66 ? ["#0d4b25","#19843d","#35a14f"] :
+                       ["#10351d","#2f7b32","#75a843"];
+
+    for (let i=0; i<4; i++) {
+      ctx.fillStyle = leafColors[i % leafColors.length];
+      ctx.beginPath();
+      ctx.ellipse(rand(-s*.22,s*.22), -s*.18 - i*s*.12, s*rand(.32,.58), s*rand(.22,.42), rand(-.5,.5), 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    if (t.vine) {
+      ctx.strokeStyle = "rgba(126,204,89,.62)";
+      ctx.lineWidth = Math.max(1, s*.018);
+      ctx.beginPath();
+      ctx.moveTo(s*.16, -s*.6);
+      ctx.bezierCurveTo(s*.02, -s*.2, s*.28, s*.10, s*.04, s*.52);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawRiver() {
+    const horizon = H * .34;
+    const g = ctx.createLinearGradient(0,horizon,0,H);
+    g.addColorStop(0,"#209681");
+    g.addColorStop(.5,"#126e79");
+    g.addColorStop(1,"#083c58");
+    ctx.fillStyle = g;
+
+    ctx.beginPath();
+    ctx.moveTo(W*.43,horizon);
+    ctx.lineTo(W*.57,horizon);
+    ctx.lineTo(W,H);
+    ctx.lineTo(0,H);
+    ctx.closePath();
+    ctx.fill();
+
+    // river edge highlights
+    ctx.strokeStyle = "rgba(255,216,120,.18)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(W*.43,horizon);
+    ctx.bezierCurveTo(W*.32,H*.52,W*.18,H*.78,0,H);
+    ctx.moveTo(W*.57,horizon);
+    ctx.bezierCurveTo(W*.68,H*.52,W*.82,H*.78,W,H);
+    ctx.stroke();
+
+    // water motion lines
+    for (let i=0; i<46; i++) {
+      const z = ((i/46 + (state.distance*.00045)%1)%1);
+      const p = project(Math.sin(i*9.7)*.48, z);
+      ctx.strokeStyle = `rgba(220,255,255,${.055 + p.depth*.21})`;
+      ctx.lineWidth = 1 + p.scale*1.6;
+      ctx.beginPath();
+      ctx.moveTo(p.x-p.riverW*.13, p.y);
+      ctx.quadraticCurveTo(p.x, p.y+8*p.scale, p.x+p.riverW*.13, p.y);
+      ctx.stroke();
+    }
+
+    // wake path behind boat
+    const wakeY = H * state.boatY;
+    ctx.strokeStyle = "rgba(230,255,255,.52)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(W*.5 - 22 + state.lane*W*.18, wakeY-22);
+    ctx.bezierCurveTo(W*.38,wakeY+8,W*.32,H*.96,W*.18,H*1.05);
+    ctx.moveTo(W*.5 + 22 + state.lane*W*.18, wakeY-22);
+    ctx.bezierCurveTo(W*.62,wakeY+8,W*.68,H*.96,W*.82,H*1.05);
+    ctx.stroke();
+  }
+
+  function drawLabel(text, x, y, scale, kind) {
+    if (scale < .38) return;
+    ctx.save();
+    ctx.font = `${Math.max(12, 13*scale)}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const pad = 7 * scale;
+    const w = ctx.measureText(text).width + pad*2;
+    const h = 24 * scale;
+    ctx.fillStyle = kind === "good" ? "rgba(22,96,45,.78)" : "rgba(78,23,17,.76)";
+    ctx.strokeStyle = kind === "good" ? "rgba(174,255,190,.7)" : "rgba(255,190,160,.65)";
+    ctx.lineWidth = 1.5;
+    roundRect(x-w/2, y-h-18*scale, w, h, 8*scale);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "white";
+    ctx.fillText(text, x, y-h/2-18*scale);
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawObject(o) {
+    const p = project(o.lane, o.z);
+    const s = p.scale * W * o.w;
+
+    if (o.type === "crate") {
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(Math.sin(state.t*.04+o.z)*.15);
+      ctx.fillStyle="#d79b2e";
+      roundRect(-s*.45,-s*.36,s*.9,s*.72,s*.08);
+      ctx.fill();
+      ctx.strokeStyle="#ffe59a";
+      ctx.lineWidth=Math.max(2,s*.055);
+      ctx.stroke();
+      ctx.strokeStyle="#fff0ad";
+      ctx.beginPath();
+      ctx.moveTo(0,-s*.36); ctx.lineTo(0,s*.36);
+      ctx.moveTo(-s*.45,0); ctx.lineTo(s*.45,0);
+      ctx.stroke();
+      ctx.restore();
+      drawLabel("Supply", p.x, p.y-s*.42, p.scale, "good");
+      return;
+    }
+
+    if (o.type === "raider") {
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.fillStyle="rgba(0,0,0,.25)";
+      ctx.beginPath(); ctx.ellipse(0,s*.44,s*.55,s*.16,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#1a1d21";
+      ctx.beginPath();
+      ctx.moveTo(0,-s*.82);
+      ctx.lineTo(s*.46,-s*.19);
+      ctx.lineTo(s*.36,s*.72);
+      ctx.lineTo(-s*.36,s*.72);
+      ctx.lineTo(-s*.46,-s*.19);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle="#a61f1f";
+      ctx.fillRect(-s*.23,-s*.14,s*.46,s*.42);
+      ctx.fillStyle="#ffcf6e";
+      ctx.fillRect(-s*.08,-s*.67,s*.16,s*.22);
+      ctx.restore();
+      drawLabel("Raider", p.x, p.y-s*.55, p.scale, "bad");
+      return;
+    }
+
+    if (o.type === "rock") {
+      ctx.fillStyle="#626862";
+      ctx.beginPath();
+      ctx.ellipse(p.x,p.y,s*.48,s*.32,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle="#9ea092";
+      ctx.beginPath();
+      ctx.ellipse(p.x-s*.13,p.y-s*.08,s*.16,s*.09,0,0,Math.PI*2);
+      ctx.fill();
+      drawLabel("Rock", p.x, p.y-s*.35, p.scale, "bad");
+      return;
+    }
+
+    if (o.type === "croc") {
+      ctx.fillStyle="#1f5425";
+      ctx.beginPath();
+      ctx.ellipse(p.x,p.y,s*.76,s*.24,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle="#103c1b";
+      ctx.beginPath();
+      ctx.ellipse(p.x+s*.22,p.y-s*.02,s*.28,s*.14,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle="#f4e27c";
+      ctx.beginPath();
+      ctx.arc(p.x-s*.18,p.y-s*.055,Math.max(2,s*.04),0,Math.PI*2);
+      ctx.arc(p.x+s*.18,p.y-s*.055,Math.max(2,s*.04),0,Math.PI*2);
+      ctx.fill();
+      drawLabel("Croc", p.x, p.y-s*.32, p.scale, "bad");
+      return;
+    }
+
+    if (o.type === "snag") {
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(-.35);
+      ctx.strokeStyle="#6c4328";
+      ctx.lineWidth=Math.max(4,s*.13);
+      ctx.beginPath();
+      ctx.moveTo(-s*.5,s*.26);
+      ctx.lineTo(s*.45,-s*.32);
+      ctx.stroke();
+      ctx.lineWidth=Math.max(3,s*.08);
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(s*.33,-s*.44);
+      ctx.moveTo(-s*.12,s*.04);
+      ctx.lineTo(-s*.42,-s*.28);
+      ctx.stroke();
+      ctx.restore();
+      drawLabel("Snag", p.x, p.y-s*.36, p.scale, "bad");
+      return;
+    }
+
+    // log
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(Math.sin(state.t*.018+o.z)*.55);
+    ctx.fillStyle="#7a4c27";
+    roundRect(-s*.7,-s*.14,s*1.4,s*.28,s*.13);
+    ctx.fill();
+    ctx.fillStyle="#b4793b";
+    ctx.beginPath();
+    ctx.arc(-s*.7,0,s*.14,0,Math.PI*2);
+    ctx.arc(s*.7,0,s*.14,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    drawLabel("Log", p.x, p.y-s*.33, p.scale, "bad");
+  }
+
+  function drawBoat() {
+    const x = W*.5 + state.lane * W*.18;
+    const y = H * state.boatY;
+    const s = Math.min(W,H) * .18;
+
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(state.steering * .10);
+    if (state.inv && Math.floor(state.inv/5)%2===0) ctx.globalAlpha=.56;
+
+    ctx.fillStyle="rgba(0,0,0,.3)";
+    ctx.beginPath();
+    ctx.ellipse(0,s*.36,s*.35,s*.14,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle="#5d2b19";
+    ctx.beginPath();
+    ctx.moveTo(0,-s*.62);
+    ctx.lineTo(s*.34,-s*.18);
+    ctx.lineTo(s*.26,s*.55);
+    ctx.quadraticCurveTo(0,s*.73,-s*.26,s*.55);
+    ctx.lineTo(-s*.34,-s*.18);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle="#ad7134";
+    ctx.beginPath();
+    ctx.moveTo(0,-s*.48);
+    ctx.lineTo(s*.23,-s*.14);
+    ctx.lineTo(s*.18,s*.43);
+    ctx.quadraticCurveTo(0,s*.56,-s*.18,s*.43);
+    ctx.lineTo(-s*.23,-s*.14);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle="#ecd487";
+    roundRect(-s*.12,-s*.12,s*.24,s*.28,s*.03);
+    ctx.fill();
+
+    ctx.fillStyle="#20313a";
+    roundRect(-s*.075,-s*.045,s*.15,s*.125,s*.025);
+    ctx.fill();
+
+    ctx.fillStyle="#d8eeee";
+    ctx.beginPath();
+    ctx.moveTo(-s*.045,-s*.58);
+    ctx.lineTo(s*.045,-s*.58);
+    ctx.lineTo(s*.025,-s*.36);
+    ctx.lineTo(-s*.025,-s*.36);
+    ctx.closePath();
+    ctx.fill();
+
+    // small driver silhouette
+    ctx.fillStyle="#17201a";
+    ctx.beginPath();
+    ctx.arc(0,-s*.18,s*.055,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawSpray() {
+    for (const p of state.spray) {
+      ctx.globalAlpha = clamp(p.life/28,0,1);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.s,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawVignetteAndFog() {
+    const fogAlpha = biome() === "Deep Jungle" ? .20 : biome() === "Jungle Channel" ? .13 : .06;
+    ctx.fillStyle = `rgba(216,255,220,${fogAlpha})`;
+    for (let i=0; i<5; i++) {
+      ctx.beginPath();
+      ctx.ellipse(W*(.18+i*.18)+Math.sin(state.t*.008+i)*40, H*(.28+i*.09), W*.22, H*.055, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    const g = ctx.createRadialGradient(W/2,H*.56,Math.min(W,H)*.18,W/2,H*.56,Math.max(W,H)*.72);
+    g.addColorStop(0,"rgba(0,0,0,0)");
+    g.addColorStop(1,"rgba(0,0,0,.48)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function draw() {
+    ctx.save();
+    if (state.shake > 0) {
+      ctx.translate(rand(-state.shake,state.shake),rand(-state.shake,state.shake));
+      state.shake *= .88;
+      if (state.shake < .5) state.shake = 0;
+    }
+
+    drawSky();
+    drawLayeredJungle();
+    drawRiver();
+
+    const objects = [...state.objects].sort((a,b)=>b.z-a.z);
+    for (const o of objects) drawObject(o);
+
+    drawSpray();
+    drawBoat();
+    drawVignetteAndFog();
+
+    ctx.restore();
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+})();
+</script>
+</body>
+</html>
