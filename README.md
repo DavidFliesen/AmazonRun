@@ -1,79 +1,149 @@
-# Amazon Run — Stylized 3D Prototype
+<p align="center">
+  <img src="amazon-run-logo.png" alt="Amazon Run Logo" width="500">
+</p>
 
-Amazon Run is a browser-based stylized 3D river boat prototype built with **Three.js**.
+# Amazon Run
 
-## Current version
+A stylized 3D river adventure inspired by the Amazon rainforest.
 
-This version includes:
+Pilot a small river boat deep into the jungle, deliver critical supplies to remote outposts, avoid natural hazards, and explore ancient ruins hidden along the riverbanks.
 
-- Full-screen third-person 3D river boat gameplay
-- Amazon jungle river setting
-- Stylized wooden boat
-- Floating supply crates
-- Light river hazards
-- Jungle banks, trees, ruins, birds, fog, and water ripples
-- Mission HUD
-- Amazon Run logo image
-- Hamburger menu in the upper-left corner
+Built entirely as a browser-based experience using Three.js and designed to run on GitHub Pages with no server requirements.
+
+---
+
+## Features
+
+### 🌴 Amazon Jungle Environment
+
+- Dense jungle riverbanks
+- Ancient stone ruins
+- Dynamic fog and atmospheric lighting
+- Birds and wildlife
+- River reflections and water effects
+- Scenic exploration-focused gameplay
+
+### 🚤 River Boat Gameplay
+
+- Third-person boat camera
+- Stylized cargo boat inspired by Amazon river transport
+- Engine boost system
+- Smooth steering controls
+- Mobile and desktop support
+
+### 📦 Mission System
+
+- Deliver supply crates to remote outposts
+- Progress through multiple jungle sectors
+- Increasing environmental challenges
+- Exploration-focused pacing
+
+### ⚠️ River Hazards
+
+- Floating logs
+- River rocks
+- Narrow river passages
+- Environmental obstacles
+
+Designed to challenge the player without overwhelming them.
+
+### 🖥 User Interface
+
+- Amazon Run logo branding
+- Mission tracker
+- Distance counter
+- Speed indicator
+- Zone information
+- Hamburger menu
 - Fullscreen toggle
 - Reset View option
 - Restart Mission option
-- Mobile-friendly touch controls
 
-## How to play
+### 📱 Mobile Friendly
 
-Mission:
+- Touch controls
+- Fullscreen support
+- Pinch-zoom prevention
+- Responsive interface
 
-> Deliver 3 supply crates to the river outpost.
+---
 
-Controls:
+## Controls
 
-- **A / D** or **Left / Right Arrow** — steer
-- **W / S** or **Up / Down Arrow** — adjust speed
-- **Spacebar** — gentle boost
-- On touch devices, use the on-screen steering and boost buttons.
+| Key | Action |
+|------|---------|
+| W | Accelerate |
+| S | Slow / Reverse |
+| A | Steer Left |
+| D | Steer Right |
+| Arrow Keys | Alternative Controls |
+| Space | Engine Boost |
 
-## Fullscreen
+### Mobile
 
-The game attempts to enter fullscreen when the player starts the mission.
+- Left Control Pad: Steering
+- Boost Button: Engine Boost
 
-If the browser blocks fullscreen, use the hamburger menu in the upper-left corner and choose:
+---
 
-> Toggle Fullscreen
+## Fullscreen Mode
 
-## Fixing zoom or camera issues
+The game attempts to enter fullscreen when the mission begins.
 
-If the browser view gets zoomed or the camera feels off, open the hamburger menu and choose:
+If fullscreen is not enabled automatically:
 
-> Reset View
+1. Open the hamburger menu in the upper-left corner.
+2. Select **Toggle Fullscreen**.
 
-The page also includes viewport and touch settings to reduce accidental pinch-zoom and double-tap zoom on mobile browsers.
+---
 
-## GitHub Pages setup
+## GitHub Pages Deployment
 
-Upload these files to the root of your GitHub repository:
+Upload the following files to the root of your repository:
 
-- `index.html`
-- `amazon-run-logo.png`
-- `README.md`
+- index.html
+- amazon-run-logo.png
+- README.md
 
-Then enable GitHub Pages:
+Enable GitHub Pages:
 
-1. Go to your repository.
-2. Open **Settings**.
-3. Open **Pages**.
-4. Set the source to your main branch and root folder.
-5. Save and open the published GitHub Pages link.
+1. Open your repository.
+2. Go to **Settings** → **Pages**.
+3. Select your main branch.
+4. Set the source folder to `/ (root)`.
+5. Save.
 
-## Notes
+GitHub will publish the game automatically.
 
-This is still a prototype. The next improvements would be:
+---
 
-- Better 3D boat model
-- Better crate model
-- Jungle sound loop
-- Engine sound
-- Dock/outpost delivery point
-- More natural river bends
-- Better mobile steering
-- Save/load progress
+## Technology
+
+- Three.js
+- JavaScript
+- HTML5
+- CSS3
+- WebGL
+
+No backend services required.
+
+---
+
+## Roadmap
+
+- Improved low-poly boat model
+- Better water shader
+- River docking system
+- Village delivery locations
+- Smuggler encounters
+- Wildlife interactions
+- Dynamic weather
+- Day/night cycle
+- Save game support
+- Additional river regions
+
+---
+
+## License
+
+This project is intended as an open-source browser game for educational and entertainment purposes.
