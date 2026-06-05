@@ -144,7 +144,7 @@
 
 <div id="hud">
   <div class="hudBox">
-    <div id="mission">Mission: Collect supplies and reach extraction</div>
+    <div id="mission">Mission: Explore the river, collect supplies, and reach extraction</div>
     <div>Hull</div>
     <div class="bar"><div id="hullBar" class="fill" style="background:linear-gradient(90deg,#ff4b4b,#ffc14b)"></div></div>
     <div style="margin-top:6px">Fuel</div>
@@ -152,7 +152,7 @@
   </div>
   <div class="hudBox" style="text-align:right;min-width:250px">
     <div id="score">Score: 0</div>
-    <div id="supplies">Supplies: 0 / 12</div>
+    <div id="supplies">Supplies: 0 / 10</div>
     <div id="biome">Open River</div>
   </div>
 </div>
@@ -161,9 +161,9 @@
   <div class="panel" id="panel">
     <h1>Amazon Run</h1>
     <p>A third-person river pursuit through the Amazon.</p>
-    <p>Steer through the river, collect supply crates, avoid hazards, and outrun raider boats as the jungle closes in.</p>
+    <p>Ease downriver through the Amazon, collect supply crates, enjoy the scenery, and face greater danger only as the jungle closes in.</p>
     <p class="small">Keyboard: A/D or ←/→ steer, W/S or ↑/↓ shift lane, Space boost. Touch: drag left side to steer, hold BOOST.</p>
-    <p><b>Press Enter or tap to begin.</b></p>
+    <p class="small">New balance: slower start, gentler hazards, thicker jungle, and a smoother challenge curve.</p><p><b>Press Enter or tap to begin.</b></p>
   </div>
 </div>
 
@@ -206,7 +206,7 @@
     hull: 100,
     fuel: 100,
     supplies: 0,
-    targetSupplies: 12,
+    targetSupplies: 10,
     shake: 0,
     speed: 1,
     steering: 0,
@@ -246,7 +246,7 @@
     state.spray.length = 0;
     state.clouds.length = 0;
     state.banks.length = 0;
-    for (let i=0;i<60;i++) state.banks.push({side:Math.random()<.5?-1:1, z:rand(0,1), x:rand(.62,.95), size:rand(.7,1.8), kind:Math.random()});
+    for (let i=0;i<130;i++) state.banks.push({side:Math.random()<.5?-1:1, z:rand(0,1), x:rand(.48,.98), size:rand(.9,2.6), kind:Math.random()});
     for (let i=0;i<18;i++) state.clouds.push({x:rand(0,W), y:rand(0,H*.35), s:rand(40,160), v:rand(.05,.18)});
   }
 
@@ -284,15 +284,15 @@
 
   function spawn() {
     const d = state.distance;
-    const danger = 1 + d / 3000;
-    if (Math.random() < .025 * danger) {
+    const danger = Math.max(0.35, 0.35 + d / 5200);
+    if (Math.random() < .010 * danger) {
       const types = ["log","rock","croc","snag"];
       state.objects.push({type:types[Math.floor(rand(0,types.length))], z:1.02, lane:rand(-.85,.85), w:rand(.08,.16), hit:false});
     }
-    if (Math.random() < .012) {
+    if (Math.random() < .015) {
       state.objects.push({type:"crate", z:1.02, lane:rand(-.75,.75), w:.09, hit:false});
     }
-    if (Math.random() < .008 * danger) {
+    if (d > 1400 && Math.random() < .0038 * danger) {
       state.objects.push({type:"raider", z:1.06, lane:rand(-.75,.75), w:.12, hit:false, drift:rand(-.003,.003)});
     }
   }
@@ -311,10 +311,10 @@
     state.lane = clamp(state.lane + state.steering*.018 + laneMove*.012, -1, 1);
 
     const boosting = (input[" "] || state.boost) && state.fuel > 0;
-    state.speed = lerp(state.speed, boosting ? 1.75 : 1.0, .04);
+    state.speed = lerp(state.speed, boosting ? 1.45 : 0.72, .035);
     state.fuel = clamp(state.fuel + (boosting ? -.42 : .055), 0, 100);
 
-    const flow = 5.2 * state.speed;
+    const flow = 2.65 * state.speed;
     state.distance += flow;
     state.score = Math.floor(state.distance/4) + state.supplies*250;
 
@@ -334,7 +334,7 @@
           state.hull = clamp(state.hull + 4,0,100);
           splash(0, .76, 18, "#ffe783");
         } else if (state.inv <= 0) {
-          state.hull -= o.type === "raider" ? 28 : 18;
+          state.hull -= o.type === "raider" ? 18 : 10;
           state.inv = 60;
           state.shake = 24;
           splash(0, .76, 30, "#ffffff");
@@ -348,12 +348,12 @@
 
     for (const b of state.banks) {
       b.z -= .0045 * state.speed;
-      if (b.z <= 0) Object.assign(b,{side:Math.random()<.5?-1:1, z:1, x:rand(.62,.96), size:rand(.7,1.9), kind:Math.random()});
+      if (b.z <= 0) Object.assign(b,{side:Math.random()<.5?-1:1, z:1, x:rand(.48,.98), size:rand(.9,2.7), kind:Math.random()});
     }
 
     if (state.t % 4 === 0) splash(rand(-.09,.09), .83, boosting?3:1, "#dffcff");
     if (state.hull <= 0) end(false);
-    if (state.distance > 6500 && state.supplies >= state.targetSupplies) end(true);
+    if (state.distance > 5200 && state.supplies >= state.targetSupplies) end(true);
 
     hullBar.style.width = state.hull + "%";
     fuelBar.style.width = state.fuel + "%";
@@ -409,16 +409,16 @@
   }
 
   function drawBanks() {
-    ctx.fillStyle = "#10301d";
+    ctx.fillStyle = "#082514";
     ctx.beginPath();
     ctx.moveTo(0,H*.34);
-    ctx.bezierCurveTo(W*.12,H*.45,W*.05,H*.74,0,H);
+    ctx.bezierCurveTo(W*.22,H*.43,W*.10,H*.75,0,H);
     ctx.lineTo(0,H*.34);
     ctx.fill();
 
     ctx.beginPath();
     ctx.moveTo(W,H*.34);
-    ctx.bezierCurveTo(W*.88,H*.45,W*.95,H*.74,W,H);
+    ctx.bezierCurveTo(W*.78,H*.43,W*.90,H*.75,W,H);
     ctx.lineTo(W,H*.34);
     ctx.fill();
 
