@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Amazon Run Models Preview</title>
+<style>html,body{margin:0;overflow:hidden;background:#0b140e;color:white;font-family:Arial}#note{position:fixed;left:16px;top:16px;background:rgba(0,0,0,.55);padding:12px 14px;border-radius:12px}</style></head>
+<body><div id="note"><b>Amazon Run Models</b><br>Boat and Alligator GLB preview</div>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/GLTFLoader.js";
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x87b99d);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,100);camera.position.set(0,4.2,8);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffe6aa,0x164020,2));const sun=new THREE.DirectionalLight(0xffcc88,3);sun.position.set(5,9,6);sun.castShadow=true;scene.add(sun);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(18,18),new THREE.MeshStandardMaterial({color:0x245c36,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const loader=new GLTFLoader();let boat,gator;
+loader.load("amazon_river_boat.glb",g=>{boat=g.scene;boat.position.set(0,0,.7);boat.scale.setScalar(1.1);scene.add(boat);});
+loader.load("amazon_alligator.glb",g=>{gator=g.scene;gator.position.set(0,0,-3.2);gator.scale.setScalar(.65);scene.add(gator);});
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+function animate(){requestAnimationFrame(animate);if(boat)boat.rotation.y+=.004;if(gator)gator.rotation.y-=.004;camera.lookAt(0,1,0);renderer.render(scene,camera);}animate();
+</script></body></html>
